@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#F7F4EA">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="롱기스트">
+<title>JB대전 롱기스트 계측</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --ground:#F7F4EA;      /* 한지 아이보리 — 햇빛 반사율 확보 */
+    --panel:#FFFDF7;
+    --ink:#16281E;         /* 먹녹색 */
+    --ink-2:#4A5C52;
+    --jade:#1D5236;        /* JB 딥그린 */
+    --jade-soft:#E4EDE7;
+    --gold:#A9822B;        /* 앤티크 골드 */
+    --gold-soft:#F6EDD6;
+    --clay:#B3412F;        /* 판정 보류 */
+    --clay-soft:#F8E7E3;
+    --mist:#DED8C8;
+    --shadow:0 1px 0 rgba(22,40,30,.08), 0 6px 18px -12px rgba(22,40,30,.5);
+    --sans:'IBM Plex Sans KR', system-ui, sans-serif;
+    --serif:'Gowun Batang', serif;
+    --mono:'IBM Plex Mono', ui-monospace, monospace;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:var(--sans); font-size:16px; line-height:1.5;
+    -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:520px; margin:0 auto; padding:18px 16px 56px; display:flex; flex-direction:column; gap:18px}
+
+  /* ── 머리 ─────────────────────────────── */
+  header{display:flex; flex-direction:column; gap:4px; padding-bottom:2px}
+  .eyebrow{font-size:12px; letter-spacing:.18em; color:var(--gold); font-weight:600}
+  h1{font-family:var(--serif); font-weight:700; font-size:30px; line-height:1.15; margin:0; text-wrap:balance}
+  .sub{font-size:13px; color:var(--ink-2)}
+
+  /* ── 공통 카드 ─────────────────────────── */
+  .card{background:var(--panel); border:1px solid var(--mist); border-radius:14px; padding:16px; box-shadow:var(--shadow)}
+  .card > h2{
+    font-family:var(--sans); font-size:12px; font-weight:700; letter-spacing:.14em;
+    color:var(--ink-2); margin:0 0 12px; text-transform:none;
+  }
+  .row{display:flex; gap:8px; flex-wrap:wrap}
+
+  /* ── 선택 버튼(칩) ─────────────────────── */
+  .chip{
+    flex:1 1 auto; min-height:52px; padding:8px 12px; border-radius:11px; cursor:pointer;
+    border:1.5px solid var(--mist); background:var(--panel); color:var(--ink);
+    font-family:var(--sans); font-size:15px; font-weight:600; line-height:1.25;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+    transition:background .12s, border-color .12s, color .12s;
+  }
+  .chip small{font-size:11px; font-weight:500; color:var(--ink-2)}
+  .chip[aria-pressed="true"]{background:var(--jade); border-color:var(--jade); color:#fff}
+  .chip[aria-pressed="true"] small{color:rgba(255,255,255,.78)}
+  .chip:focus-visible, button:focus-visible, input:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
+
+  .seg{display:flex; gap:6px}
+  .seg .chip{min-height:44px; font-size:14px}
+
+  /* ── 기준점 ───────────────────────────── */
+  .tee{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:12px}
+  .tee-state{font-size:14px; font-weight:600}
+  .tee-state.none{color:var(--clay)}
+  .tee-state.ok{color:var(--jade)}
+  .coord{font-family:var(--mono); font-size:11.5px; color:var(--ink-2); word-break:break-all}
+
+  /* ── 큰 버튼 ──────────────────────────── */
+  button.act{
+    width:100%; min-height:60px; border-radius:12px; cursor:pointer;
+    font-family:var(--sans); font-size:17px; font-weight:700; letter-spacing:.01em;
+    border:1.5px solid var(--jade); background:var(--jade); color:#fff;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  button.act.ghost{background:var(--panel); color:var(--jade)}
+  button.act.big{min-height:76px; font-size:20px; background:var(--gold); border-color:var(--gold)}
+  button.act[disabled]{opacity:.42; cursor:not-allowed}
+  button.mini{
+    min-height:38px; padding:0 12px; border-radius:9px; cursor:pointer;
+    border:1.5px solid var(--mist); background:var(--panel); color:var(--ink-2);
+    font-family:var(--sans); font-size:13px; font-weight:600;
+  }
+
+  /* ── 계측 표식(팻말) ──────────────────── */
+  .plaque{
+    border:2px solid var(--gold); border-radius:12px; background:var(--gold-soft);
+    padding:14px 16px 16px; text-align:center; display:none;
+  }
+  .plaque.show{display:block}
+  .plaque .who{font-size:13px; font-weight:600; color:var(--ink-2); margin-bottom:2px}
+  .plaque .dist{
+    font-family:var(--sans); font-variant-numeric:tabular-nums;
+    font-size:58px; font-weight:700; line-height:1; letter-spacing:-.02em; color:var(--ink);
+  }
+  .plaque .dist span{font-size:22px; font-weight:600; margin-left:3px}
+  .plaque .err{font-size:13px; color:var(--ink-2); margin-top:6px; font-variant-numeric:tabular-nums}
+
+  .status{
+    min-height:22px; font-size:13.5px; color:var(--ink-2); text-align:center;
+    font-variant-numeric:tabular-nums;
+  }
+  .status.busy{color:var(--jade); font-weight:600}
+  .status.err{color:var(--clay); font-weight:600}
+
+  /* ── 순위표 ───────────────────────────── */
+  .board{display:flex; flex-direction:column; gap:14px}
+  .board h3{
+    font-family:var(--sans); font-size:12px; letter-spacing:.14em; font-weight:700;
+    color:var(--ink-2); margin:0 0 8px; padding-bottom:6px; border-bottom:1px solid var(--mist);
+  }
+  ol.rank{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px}
+  ol.rank li{
+    display:grid; grid-template-columns:26px 1fr auto auto; align-items:center; gap:10px;
+    padding:9px 10px; border-radius:10px; background:var(--ground); border:1px solid transparent;
+  }
+  ol.rank li.lead{background:var(--gold-soft); border-color:var(--gold)}
+  ol.rank li.out{opacity:.55}
+  .pos{font-family:var(--serif); font-size:17px; font-weight:700; color:var(--gold); text-align:center}
+  .nm{font-weight:600; font-size:15px}
+  .nm em{font-style:normal; font-size:11.5px; color:var(--ink-2); font-weight:500; display:block}
+  .val{font-variant-numeric:tabular-nums; font-weight:700; font-size:17px}
+  .val small{font-size:11px; font-weight:500; color:var(--ink-2); display:block; text-align:right}
+  .del{border:none; background:none; color:var(--ink-2); font-size:18px; cursor:pointer; padding:0 2px; line-height:1}
+  .empty{font-size:13.5px; color:var(--ink-2); padding:4px 2px}
+
+  .flag{
+    display:flex; gap:8px; align-items:flex-start; margin-top:10px; padding:10px 12px;
+    background:var(--clay-soft); border:1px solid var(--clay); border-radius:10px;
+    font-size:13px; color:var(--ink); line-height:1.45;
+  }
+  .flag b{color:var(--clay)}
+
+  /* ── 수동 입력 ────────────────────────── */
+  details{border:1px solid var(--mist); border-radius:12px; background:var(--panel); padding:0 14px}
+  summary{cursor:pointer; padding:13px 0; font-size:14px; font-weight:600; color:var(--ink-2)}
+  details[open] summary{border-bottom:1px solid var(--mist); margin-bottom:12px}
+  .manual{display:flex; flex-direction:column; gap:9px; padding-bottom:14px}
+  label.fld{display:flex; flex-direction:column; gap:4px; font-size:12px; font-weight:600; color:var(--ink-2)}
+  input[type=text]{
+    font-family:var(--mono); font-size:15px; padding:11px 12px; border-radius:9px;
+    border:1.5px solid var(--mist); background:var(--ground); color:var(--ink);
+  }
+  .help{font-size:12.5px; color:var(--ink-2); line-height:1.5}
+
+  footer{font-size:12px; color:var(--ink-2); line-height:1.6; text-align:center}
+  hr.rule{border:none; border-top:1px solid var(--mist); margin:2px 0}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">제4회 JB대전 · 강촌엘리시안CC</div>
+    <h1>롱기스트 계측</h1>
+    <div class="sub">티 지점을 한 번 저장한 뒤, 낙구 지점에서 측정합니다.</div>
+  </header>
+
+  <!-- 1. 홀 -->
+  <section class="card">
+    <h2>측정 홀</h2>
+    <div class="row" id="holes"></div>
+  </section>
+
+  <!-- 2. 기준점 -->
+  <section class="card">
+    <h2>티 기준점</h2>
+    <div class="tee">
+      <div class="tee-state none" id="teeState">저장 안 됨</div>
+      <button class="mini" id="teeClear" hidden>지우기</button>
+    </div>
+    <div class="coord" id="teeCoord"></div>
+    <button class="act ghost" id="teeBtn">티 지점 저장</button>
+    <p class="help" style="margin:10px 0 0">그날 티마커 자리에서 한 번만 저장하면 됩니다. 이후 모든 선수가 이 기준을 씁니다.</p>
+  </section>
+
+  <!-- 3. 측정 -->
+  <section class="card">
+    <h2>선수</h2>
+    <div class="row" id="players"></div>
+    <label class="fld" style="margin-top:12px">
+      <span>명단에 없으면 직접 입력</span>
+      <input type="text" id="freeName" placeholder="이름" autocomplete="off">
+    </label>
+
+    <h2 style="margin:16px 0 8px">구분</h2>
+    <div class="seg" id="sexSeg">
+      <button class="chip" data-sex="남" aria-pressed="true">남</button>
+      <button class="chip" data-sex="여" aria-pressed="false">여</button>
+    </div>
+
+    <h2 style="margin:16px 0 8px">페어웨이 안착</h2>
+    <div class="seg" id="fwSeg">
+      <button class="chip" data-fw="1" aria-pressed="true">안착</button>
+      <button class="chip" data-fw="0" aria-pressed="false">벗어남<small>기록 제외</small></button>
+    </div>
+
+    <div style="margin-top:16px; display:flex; flex-direction:column; gap:10px">
+      <button class="act big" id="measureBtn" disabled>낙구 지점 측정</button>
+      <div class="status" id="status">티 기준점을 먼저 저장하세요.</div>
+    </div>
+
+    <div class="plaque" id="plaque">
+      <div class="who" id="plaqueWho"></div>
+      <div class="dist"><span id="plaqueDist">0</span></div>
+      <div class="err" id="plaqueErr"></div>
+    </div>
+  </section>
+
+  <!-- 4. 순위 -->
+  <section class="card board">
+    <div>
+      <h3>남자부</h3>
+      <ol class="rank" id="rankM"></ol>
+    </div>
+    <div>
+      <h3>여자부</h3>
+      <ol class="rank" id="rankF"></ol>
+    </div>
+    <div id="tieFlag"></div>
+    <hr class="rule">
+    <div class="row">
+      <button class="mini" id="copyBtn" style="flex:1">기록 복사</button>
+      <button class="mini" id="resetBtn" style="flex:1">전체 지우기</button>
+    </div>
+  </section>
+
+  <!-- 5. 수동 -->
+  <details>
+    <summary>GPS가 막히면 — 좌표 직접 입력</summary>
+    <div class="manual">
+      <p class="help">지도 앱에서 지점을 길게 눌러 좌표를 복사한 뒤 붙여넣으세요. <span class="coord">37.831234, 127.612345</span> 형식입니다.</p>
+      <label class="fld"><span>티 지점 좌표</span><input type="text" id="mTee" placeholder="위도, 경도" autocomplete="off"></label>
+      <button class="act ghost" id="mTeeBtn" style="min-height:48px">티 지점으로 저장</button>
+      <label class="fld"><span>낙구 지점 좌표</span><input type="text" id="mBall" placeholder="위도, 경도" autocomplete="off"></label>
+      <button class="act ghost" id="mBallBtn" style="min-height:48px">이 좌표로 기록</button>
+    </div>
+  </details>
+
+  <footer>
+    측정값은 이 브라우저에만 저장됩니다. 창을 닫아도 남습니다.<br>
+    페어웨이 안착 여부는 사람이 눈으로 판정합니다.
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* 홀 정보는 코스 사실이라 페이지에 두고, 선수 명단은 페이지에 심지 않는다.
+     명단은 링크 해시(#p=)로 받아 이 기기에만 저장한다 — 공개 URL에 이름이 남지 않게. */
+  var HOLES = [
+    { id:"V6", label:"VALLEY 6번", note:"1·2·5조 · 파5 454m", players:[] },
+    { id:"L2", label:"LAKE 2번",   note:"3·4조 · 파5 451m",   players:[] }
+  ];
+  var FEMALE = {};
+  var K_ROSTER = "jb4.longest.roster";
+
+  function applyRoster(raw){
+    /* 형식:  V6|1조,서민지,여;1조,정종민,남 / L2|3조,김주아,여  */
+    var ok = false;
+    raw.split("/").forEach(function(block){
+      var bits = block.split("|");
+      if (bits.length !== 2) return;
+      var hole = HOLES.filter(function(h){ return h.id === bits[0].trim(); })[0];
+      if (!hole) return;
+      var list = [];
+      bits[1].split(";").forEach(function(e){
+        var f = e.split(",");
+        if (f.length < 2) return;
+        var jo = f[0].trim(), nm = f[1].trim(), sx = (f[2]||"").trim();
+        if (!nm) return;
+        list.push([jo, nm]);
+        if (sx === "여") FEMALE[nm] = 1;
+      });
+      if (list.length){ hole.players = list; ok = true; }
+    });
+    return ok;
+  }
+
+  (function initRoster(){
+    var m = (location.hash || "").match(/[#&]p=([^&]+)/);
+    var raw = null;
+    if (m){
+      try { raw = decodeURIComponent(m[1]); } catch(e){ raw = null; }
+    }
+    if (raw && applyRoster(raw)){
+      try { localStorage.setItem(K_ROSTER, raw); } catch(e){}
+      if (history.replaceState) history.replaceState(null, "", location.pathname + location.search);
+      return;
+    }
+    var cached = null;
+    try { cached = localStorage.getItem(K_ROSTER); } catch(e){}
+    if (cached) applyRoster(cached);
+  })();
+
+  var K_TEE = "jb4.longest.tee.", K_REC = "jb4.longest.records";
+  var $ = function(id){ return document.getElementById(id); };
+
+  var state = { hole:HOLES[0].id, name:"", sex:"남", fw:1, tee:null, records:load() };
+
+  function load(){
+    try { return JSON.parse(localStorage.getItem(K_REC) || "[]"); } catch(e){ return []; }
+  }
+  function save(){
+    try { localStorage.setItem(K_REC, JSON.stringify(state.records)); } catch(e){}
+  }
+  function loadTee(h){
+    try { return JSON.parse(localStorage.getItem(K_TEE + h) || "null"); } catch(e){ return null; }
+  }
+
+  /* 하버사인 — 두 좌표 사이 지표 직선거리(m) */
+  function distance(a, b){
+    var R = 6371008.8, r = Math.PI/180;
+    var p1 = a.lat*r, p2 = b.lat*r;
+    var dp = (b.lat-a.lat)*r, dl = (b.lng-a.lng)*r;
+    var s = Math.sin(dp/2)*Math.sin(dp/2) + Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);
+    return 2*R*Math.asin(Math.min(1, Math.sqrt(s)));
+  }
+  function combinedError(a, b){
+    return Math.sqrt((a||0)*(a||0) + (b||0)*(b||0));
+  }
+  function fmtCoord(p){
+    return p.lat.toFixed(6) + ", " + p.lng.toFixed(6) + "  (±" + Math.round(p.acc) + "m)";
+  }
+
+  /* ── GPS 샘플링: 6초간 받아 정확도가 가장 좋은 값 채택 ── */
+  function sample(seconds, onTick, done, fail){
+    if (!navigator.geolocation) { fail("이 브라우저에서 위치 기능을 쓸 수 없습니다."); return; }
+    var best = null, id, t0 = Date.now();
+    var timer = setInterval(function(){
+      var left = seconds - Math.floor((Date.now()-t0)/1000);
+      onTick(Math.max(0,left), best);
+      if (left <= 0) finish();
+    }, 250);
+    function finish(){
+      clearInterval(timer);
+      if (id != null) navigator.geolocation.clearWatch(id);
+      if (best) done(best); else fail("위치를 잡지 못했습니다. 하늘이 트인 곳에서 다시 시도하세요.");
+    }
+    id = navigator.geolocation.watchPosition(function(pos){
+      var c = pos.coords;
+      if (!best || c.accuracy < best.acc) best = { lat:c.latitude, lng:c.longitude, acc:c.accuracy };
+    }, function(err){
+      clearInterval(timer);
+      if (id != null) navigator.geolocation.clearWatch(id);
+      var m = err.code === 1 ? "위치 권한이 거부됐습니다. 아래 '좌표 직접 입력'을 쓰세요."
+            : err.code === 3 ? "위치 확인이 지연됩니다. 다시 시도하세요."
+            : "위치를 가져오지 못했습니다. 아래 '좌표 직접 입력'을 쓰세요.";
+      fail(m);
+    }, { enableHighAccuracy:true, maximumAge:0, timeout:seconds*1000 + 4000 });
+  }
+
+  function setStatus(msg, cls){
+    var el = $("status");
+    el.textContent = msg;
+    el.className = "status" + (cls ? " " + cls : "");
+  }
+
+  /* ── 렌더 ────────────────────────────── */
+  function renderHoles(){
+    var box = $("holes"); box.innerHTML = "";
+    HOLES.forEach(function(h){
+      var b = document.createElement("button");
+      b.className = "chip"; b.type = "button";
+      b.setAttribute("aria-pressed", String(h.id === state.hole));
+      b.innerHTML = "<span>" + h.label + "</span><small>" + h.note + "</small>";
+      b.onclick = function(){
+        state.hole = h.id; state.name = "";
+        $("freeName").value = "";
+        renderHoles(); renderPlayers(); syncTee(); renderBoard();
+      };
+      box.appendChild(b);
+    });
+  }
+
+  function currentHole(){
+    return HOLES.filter(function(h){ return h.id === state.hole; })[0];
+  }
+
+  function renderPlayers(){
+    var box = $("players"); box.innerHTML = "";
+    if (!currentHole().players.length){
+      box.innerHTML = '<p class="help" style="margin:0">이 홀의 선수 명단이 없습니다. 아래 칸에 이름을 직접 입력하세요.</p>';
+      return;
+    }
+    currentHole().players.forEach(function(p){
+      var b = document.createElement("button");
+      b.className = "chip"; b.type = "button";
+      b.style.flex = "1 1 30%";
+      b.setAttribute("aria-pressed", String(p[1] === state.name));
+      b.innerHTML = "<span>" + p[1] + "</span><small>" + p[0] + "</small>";
+      b.onclick = function(){
+        state.name = p[1];
+        $("freeName").value = "";
+        if (FEMALE[p[1]]) setSex("여"); else setSex("남");
+        renderPlayers(); syncMeasure();
+      };
+      box.appendChild(b);
+    });
+  }
+
+  function setSex(v){
+    state.sex = v;
+    Array.prototype.forEach.call($("sexSeg").children, function(b){
+      b.setAttribute("aria-pressed", String(b.dataset.sex === v));
+    });
+  }
+  function setFw(v){
+    state.fw = v;
+    Array.prototype.forEach.call($("fwSeg").children, function(b){
+      b.setAttribute("aria-pressed", String(Number(b.dataset.fw) === v));
+    });
+  }
+
+  function syncTee(){
+    state.tee = loadTee(state.hole);
+    var s = $("teeState"), c = $("teeCoord");
+    if (state.tee){
+      s.textContent = "저장됨"; s.className = "tee-state ok";
+      c.textContent = fmtCoord(state.tee);
+      $("teeBtn").textContent = "티 지점 다시 저장";
+      $("teeClear").hidden = false;
+    } else {
+      s.textContent = "저장 안 됨"; s.className = "tee-state none";
+      c.textContent = "";
+      $("teeBtn").textContent = "티 지점 저장";
+      $("teeClear").hidden = true;
+    }
+    syncMeasure();
+  }
+
+  function syncMeasure(){
+    var ready = !!state.tee;
+    $("measureBtn").disabled = !ready;
+    if (!ready) setStatus("티 기준점을 먼저 저장하세요.");
+    else if (!nameNow()) setStatus("선수를 고르거나 이름을 입력하세요.");
+    else setStatus("준비됨 — " + nameNow() + " · " + currentHole().label);
+  }
+
+  function nameNow(){
+    var free = $("freeName").value.trim();
+    return free || state.name;
+  }
+
+  function storeTee(pt){
+    try { localStorage.setItem(K_TEE + state.hole, JSON.stringify(pt)); } catch(e){}
+    syncTee();
+  }
+
+  function addRecord(pt){
+    var d = distance(state.tee, pt);
+    var e = combinedError(state.tee.acc, pt.acc);
+    var rec = {
+      hole:state.hole, name:nameNow(), sex:state.sex, fw:state.fw,
+      dist:d, err:e, at:new Date().toISOString()
+    };
+    state.records.push(rec); save();
+    showPlaque(rec);
+    renderBoard();
+  }
+
+  function showPlaque(rec){
+    $("plaqueWho").textContent = rec.name + " · " + currentHole().label + (rec.fw ? "" : " · 페어웨이 벗어남");
+    $("plaqueDist").innerHTML = Math.round(rec.dist) + "<span>m</span>";
+    $("plaqueErr").textContent = "오차 ±" + Math.round(rec.err) + "m";
+    $("plaque").classList.add("show");
+  }
+
+  function listFor(sex){
+    return state.records
+      .filter(function(r){ return r.hole === state.hole && r.sex === sex; })
+      .sort(function(a,b){
+        if (a.fw !== b.fw) return b.fw - a.fw;
+        return b.dist - a.dist;
+      });
+  }
+
+  function renderBoard(){
+    var flagged = [];
+    [["남", "rankM"], ["여", "rankF"]].forEach(function(pair){
+      var rows = listFor(pair[0]), ol = $(pair[1]);
+      ol.innerHTML = "";
+      if (!rows.length){
+        var li = document.createElement("li");
+        li.style.background = "transparent";
+        li.innerHTML = '<span class="empty" style="grid-column:1/-1">아직 기록이 없습니다.</span>';
+        ol.appendChild(li); return;
+      }
+      var valid = rows.filter(function(r){ return r.fw; });
+      if (valid.length >= 2){
+        var gap = valid[0].dist - valid[1].dist;
+        var tol = Math.sqrt(valid[0].err*valid[0].err + valid[1].err*valid[1].err);
+        if (gap < tol) flagged.push(pair[0] + "자부 1·2위 차이 " + gap.toFixed(1) + "m");
+      }
+      var pos = 0;
+      rows.forEach(function(r, i){
+        if (r.fw) pos++;
+        var li = document.createElement("li");
+        if (r.fw && pos === 1) li.className = "lead";
+        if (!r.fw) li.className = "out";
+        var idx = document.createElement("div");
+        idx.className = "pos"; idx.textContent = r.fw ? pos : "—";
+        var nm = document.createElement("div");
+        nm.className = "nm";
+        nm.innerHTML = r.name + (r.fw ? "" : "<em>페어웨이 벗어남</em>");
+        var val = document.createElement("div");
+        val.className = "val";
+        val.innerHTML = Math.round(r.dist) + "m<small>±" + Math.round(r.err) + "m</small>";
+        var del = document.createElement("button");
+        del.className = "del"; del.type = "button"; del.textContent = "×";
+        del.setAttribute("aria-label", r.name + " 기록 삭제");
+        del.onclick = function(){
+          var k = state.records.indexOf(r);
+          if (k > -1){ state.records.splice(k, 1); save(); renderBoard(); }
+        };
+        li.appendChild(idx); li.appendChild(nm); li.appendChild(val); li.appendChild(del);
+        ol.appendChild(li);
+      });
+    });
+
+    var fl = $("tieFlag");
+    fl.innerHTML = flagged.length
+      ? '<div class="flag"><b>판정 보류</b><span>' + flagged.join(" / ") +
+        ' — 오차 범위 안이라 GPS로는 못 가립니다. 팻말이나 눈으로 확인하세요.</span></div>'
+      : "";
+  }
+
+  /* ── 이벤트 ──────────────────────────── */
+  $("teeBtn").onclick = function(){
+    var b = this; b.disabled = true;
+    setStatus("티 지점 측정 중…", "busy");
+    sample(6, function(left, best){
+      setStatus("티 지점 측정 중… " + left + "초" + (best ? " · 현재 ±" + Math.round(best.acc) + "m" : ""), "busy");
+    }, function(pt){
+      b.disabled = false; storeTee(pt);
+      setStatus("티 기준점 저장 완료 (±" + Math.round(pt.acc) + "m)");
+    }, function(msg){
+      b.disabled = false; setStatus(msg, "err");
+    });
+  };
+
+  $("teeClear").onclick = function(){
+    try { localStorage.removeItem(K_TEE + state.hole); } catch(e){}
+    syncTee();
+  };
+
+  $("measureBtn").onclick = function(){
+    if (!nameNow()){ setStatus("선수를 고르거나 이름을 입력하세요.", "err"); return; }
+    var b = this; b.disabled = true;
+    setStatus("낙구 지점 측정 중…", "busy");
+    sample(6, function(left, best){
+      setStatus("낙구 지점 측정 중… " + left + "초" + (best ? " · 현재 ±" + Math.round(best.acc) + "m" : ""), "busy");
+    }, function(pt){
+      b.disabled = false; addRecord(pt);
+      setStatus("기록 완료");
+    }, function(msg){
+      b.disabled = false; setStatus(msg, "err");
+    });
+  };
+
+  Array.prototype.forEach.call($("sexSeg").children, function(b){
+    b.onclick = function(){ setSex(b.dataset.sex); };
+  });
+  Array.prototype.forEach.call($("fwSeg").children, function(b){
+    b.onclick = function(){ setFw(Number(b.dataset.fw)); };
+  });
+  $("freeName").oninput = function(){
+    if (this.value.trim()){ state.name = ""; renderPlayers(); }
+    syncMeasure();
+  };
+
+  function parseCoord(s){
+    var m = String(s).match(/(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)/);
+    if (!m) return null;
+    var lat = parseFloat(m[1]), lng = parseFloat(m[2]);
+    if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+    return { lat:lat, lng:lng, acc:5 };
+  }
+  $("mTeeBtn").onclick = function(){
+    var p = parseCoord($("mTee").value);
+    if (!p){ setStatus("좌표를 읽지 못했습니다. 37.831234, 127.612345 형식으로 넣으세요.", "err"); return; }
+    storeTee(p); setStatus("티 기준점 저장 완료 (직접 입력)");
+  };
+  $("mBallBtn").onclick = function(){
+    if (!state.tee){ setStatus("티 기준점을 먼저 저장하세요.", "err"); return; }
+    if (!nameNow()){ setStatus("선수를 고르거나 이름을 입력하세요.", "err"); return; }
+    var p = parseCoord($("mBall").value);
+    if (!p){ setStatus("좌표를 읽지 못했습니다.", "err"); return; }
+    addRecord(p); setStatus("기록 완료 (직접 입력)");
+  };
+
+  $("copyBtn").onclick = function(){
+    var out = [];
+    HOLES.forEach(function(h){
+      var rows = state.records.filter(function(r){ return r.hole === h.id; });
+      if (!rows.length) return;
+      out.push("[" + h.label + "]");
+      ["남","여"].forEach(function(sx){
+        var list = rows.filter(function(r){ return r.sex === sx; })
+                       .sort(function(a,b){ return (b.fw-a.fw) || (b.dist-a.dist); });
+        if (!list.length) return;
+        out.push(" " + sx + "자부");
+        list.forEach(function(r, i){
+          out.push("  " + (r.fw ? (i+1) + "위" : "제외") + " " + r.name + " " +
+                   Math.round(r.dist) + "m (±" + Math.round(r.err) + "m)" + (r.fw ? "" : " 페어웨이 벗어남"));
+        });
+      });
+    });
+    var text = out.join("\n") || "기록 없음";
+    var btn = this;
+    function ok(){ btn.textContent = "복사됨"; setTimeout(function(){ btn.textContent = "기록 복사"; }, 1400); }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(ok, function(){ window.prompt("복사하세요", text); });
+    } else { window.prompt("복사하세요", text); }
+  };
+
+  $("resetBtn").onclick = function(){
+    if (!state.records.length) return;
+    state.records = []; save(); renderBoard();
+    $("plaque").classList.remove("show");
+  };
+
+  renderHoles(); renderPlayers(); setSex("남"); setFw(1); syncTee(); renderBoard();
+})();
+</script>
+
+</body>
+</html>
