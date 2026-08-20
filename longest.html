@@ -96,6 +96,13 @@
   .status.err{color:var(--clay); font-weight:600}
 
   .board{display:flex; flex-direction:column; gap:14px}
+  .syncbar{display:flex; align-items:center; gap:8px; padding:9px 11px; border-radius:10px;
+    background:var(--jade-soft); border:1px solid var(--jade); font-size:12.5px; color:var(--ink-2)}
+  .syncbar .dot{width:8px; height:8px; border-radius:50%; background:var(--jade); flex:none}
+  .syncbar.busy{background:var(--gold-soft); border-color:var(--gold)}
+  .syncbar.busy .dot{background:var(--gold)}
+  .syncbar.err{background:var(--clay-soft); border-color:var(--clay)}
+  .syncbar.err .dot{background:var(--clay)}
   .board h3{font-size:12px; letter-spacing:.14em; font-weight:700; color:var(--ink-2);
     margin:0 0 8px; padding-bottom:6px; border-bottom:1px solid var(--mist)}
   ol.rank{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px}
@@ -157,6 +164,10 @@
   </section>
 
   <section class="card board">
+    <div class="syncbar" id="syncBar">
+      <span class="dot"></span><span class="t">동기화 대기</span>
+      <button class="mini" id="syncBtn" style="margin-left:auto">새로고침</button>
+    </div>
     <div><h3>남자부 · 화이트</h3><ol class="rank" id="rankM"></ol></div>
     <div><h3>여자부 · 레드</h3><ol class="rank" id="rankF"></ol></div>
     <div id="tieFlag"></div>
@@ -199,7 +210,7 @@
   </details>
 
   <footer>
-    측정값은 이 브라우저에만 저장됩니다. 창을 닫아도 남습니다.<br>
+    기록은 폰에 먼저 저장된 뒤 공용 DB로 올라갑니다. 신호가 없어도 측정은 됩니다.<br>
     ±오차는 그 순간 GPS가 보고한 정확도입니다. 기기명보다 이 값이 신뢰도 기준입니다.<br>
     페어웨이 안착 여부는 사람이 눈으로 판정합니다.
   </footer>
@@ -283,6 +294,137 @@
     records: read(K_REC,"[]"),   /* {name,sex,jo,hole,tee,fw,ball,at} — 이름당 1건(덮어쓰기) */
     guests: read("jb4.longest.guests","[]")  /* {jo,name,sex,hole} */
   };
+
+
+  /* ── 공용 DB 동기화 ─────────────────────────────────
+     심판 5명의 기록을 한 곳에 모은다. 항상 로컬에 먼저 저장하고(오프라인 대비),
+     연결되면 밀어 올린다. 티박스 샘플도 공유되므로 같은 홀·티를 여러 조가 재면
+     기준점 평균이 함께 정밀해진다. */
+  var SUPA = {
+    url: "https://ywjjwhcvhqetyrnwrhzu.supabase.co",
+    key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3amp3aGN2aHFldHlybndyaHp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNzI5NDAsImV4cCI6MjA4Njc0ODk0MH0.8QPmR0aby2XUtpxFmhcOeZrCq6kXenCSHzzEHNL5C34",
+    tees: "/rest/v1/jb_longest_tees",
+    recs: "/rest/v1/jb_longest_records"
+  };
+  var sync = { on:true, last:0, busy:false, err:null };
+
+  function uid(){
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c){
+      var r = Math.random()*16|0, v = c === "x" ? r : (r&0x3|0x8);
+      return v.toString(16);
+    });
+  }
+  function api(path, opts){
+    opts = opts || {};
+    var h = { "apikey":SUPA.key, "Authorization":"Bearer "+SUPA.key, "Content-Type":"application/json" };
+    if (opts.prefer) h["Prefer"] = opts.prefer;
+    return fetch(SUPA.url + path, {
+      method: opts.method || "GET",
+      headers: h,
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    }).then(function(r){
+      if (!r.ok) return r.text().then(function(t){ throw new Error(r.status + " " + t.slice(0,120)); });
+      return r.status === 204 ? null : r.json();
+    });
+  }
+
+  function pendingCount(){
+    var n = 0;
+    Object.keys(state.tees).forEach(function(k){
+      state.tees[k].forEach(function(x){ if (!x.sy) n++; });
+    });
+    state.records.forEach(function(r){ if (!r.sy) n++; });
+    return n;
+  }
+
+  function push(){
+    var jobs = [];
+    Object.keys(state.tees).forEach(function(k){
+      var parts = k.split(":");
+      state.tees[k].forEach(function(x){
+        if (x.sy) return;
+        jobs.push(api(SUPA.tees, { method:"POST", prefer:"return=minimal", body:{
+          id:x.id, hole:parts[0], tee:parts[1], lat:x.lat, lng:x.lng, acc:x.acc, jo:x.jo||null, dev:x.dev||null
+        }}).then(function(){ x.sy = true; }));
+      });
+    });
+    state.records.forEach(function(r){
+      if (r.sy) return;
+      jobs.push(api(SUPA.recs, { method:"POST", prefer:"resolution=merge-duplicates,return=minimal", body:{
+        name:r.name, jo:r.jo||null, sex:r.sex, tee:r.tee, hole:r.hole, fw:!!r.fw,
+        lat:r.ball.lat, lng:r.ball.lng, acc:r.ball.acc, dev:r.dev||null, updated_at:r.at
+      }}).then(function(){ r.sy = true; }));
+    });
+    if (!jobs.length) return Promise.resolve(false);
+    return Promise.all(jobs).then(function(){
+      write(K_TEE, state.tees); write(K_REC, state.records);
+      return true;
+    });
+  }
+
+  function pull(){
+    return Promise.all([
+      api(SUPA.tees + "?select=*"),
+      api(SUPA.recs + "?select=*")
+    ]).then(function(res){
+      var changed = false, seen = {};
+      Object.keys(state.tees).forEach(function(k){
+        state.tees[k].forEach(function(x){ seen[x.id] = 1; });
+      });
+      (res[0]||[]).forEach(function(row){
+        if (seen[row.id]) return;
+        var k = row.hole + ":" + row.tee;
+        if (!state.tees[k]) state.tees[k] = [];
+        state.tees[k].push({ id:row.id, lat:row.lat, lng:row.lng, acc:row.acc,
+                             jo:row.jo, dev:row.dev, at:row.created_at, sy:true });
+        changed = true;
+      });
+      (res[1]||[]).forEach(function(row){
+        var cur = recOf(row.name);
+        if (cur && (!cur.sy || (cur.at || "") >= (row.updated_at || ""))) return;
+        var rec = { name:row.name, jo:row.jo, sex:row.sex, tee:row.tee, hole:row.hole,
+                    fw:!!row.fw, ball:{ lat:row.lat, lng:row.lng, acc:row.acc },
+                    dev:row.dev, at:row.updated_at, sy:true };
+        if (cur) state.records.splice(state.records.indexOf(cur), 1, rec);
+        else state.records.push(rec);
+        changed = true;
+      });
+      if (changed){ write(K_TEE, state.tees); write(K_REC, state.records); }
+      return changed;
+    });
+  }
+
+  function syncNow(){
+    if (sync.busy) return Promise.resolve();
+    sync.busy = true; renderSync();
+    return push()
+      .then(pull)
+      .then(function(changed){
+        sync.err = null; sync.last = Date.now(); sync.busy = false;
+        renderAll();
+      })
+      .catch(function(e){
+        sync.err = e.message || "연결 실패"; sync.busy = false; renderSync();
+      });
+  }
+
+  function renderSync(){
+    var el = $("syncBar");
+    if (!el) return;
+    var n = pendingCount();
+    var txt, cls;
+    if (sync.busy){ txt = "동기화 중…"; cls = "busy"; }
+    else if (sync.err){ txt = "연결 안 됨 · 대기 " + n + "건 (기록은 폰에 저장됨)"; cls = "err"; }
+    else if (n){ txt = "대기 " + n + "건"; cls = "err"; }
+    else {
+      var ago = sync.last ? Math.round((Date.now()-sync.last)/1000) : null;
+      txt = sync.last ? ("전체 동기화됨 · " + (ago < 60 ? ago + "초 전" : Math.round(ago/60) + "분 전")) : "동기화 대기";
+      cls = "";
+    }
+    el.className = "syncbar " + cls;
+    el.querySelector(".t").textContent = txt;
+  }
 
   /* ── 계산 ─────────────────────────────── */
   function distance(a,b){
@@ -370,9 +512,10 @@
       if (off > 30) warn = "기존 기준점에서 " + Math.round(off) + "m 떨어져 있습니다. 같은 티박스가 맞는지 확인하세요.";
     }
     if (!state.tees[key]) state.tees[key] = [];
+    pt.id = uid(); pt.jo = state.jo; pt.dev = pt.dev || DEVICE; pt.sy = false;
     state.tees[key].push(pt);
     write(K_TEE, state.tees);
-    renderAll();
+    renderAll(); syncNow();
     return { ref:teeRef(key), warn:warn };
   }
   function upsertRecord(p, ball){
@@ -380,10 +523,11 @@
     var rec = { name:p.name, sex:p.sex, jo:p.jo, hole:p.hole,
                 tee:(p.sex==="여"?"R":"W"), fw:(old?old.fw:1), ball:ball,
                 dev:(ball.dev || DEVICE), at:new Date().toISOString() };
+    rec.at = new Date().toISOString(); rec.sy = false;
     if (old) state.records.splice(state.records.indexOf(old), 1, rec);
     else state.records.push(rec);
     write(K_REC, state.records);
-    renderAll();
+    renderAll(); syncNow();
     return rec;
   }
 
@@ -503,7 +647,8 @@
           b.textContent = o[1];
           b.setAttribute("aria-pressed", String(String(rec.fw) === o[0]));
           b.onclick = function(){
-            rec.fw = Number(o[0]); write(K_REC, state.records); renderAll();
+            rec.fw = Number(o[0]); rec.at = new Date().toISOString(); rec.sy = false;
+            write(K_REC, state.records); renderAll(); syncNow();
           };
           fw.appendChild(b);
         });
@@ -580,7 +725,11 @@
         del.setAttribute("aria-label", x.r.name + " 기록 삭제");
         del.onclick = function(){
           var k = state.records.indexOf(x.r);
-          if (k > -1){ state.records.splice(k,1); write(K_REC, state.records); renderAll(); }
+          if (k > -1){
+            state.records.splice(k,1); write(K_REC, state.records); renderAll();
+            api(SUPA.recs + "?name=eq." + encodeURIComponent(x.r.name), { method:"DELETE", prefer:"return=minimal" })
+              .catch(function(){});
+          }
         };
         li.appendChild(idx); li.appendChild(nm); li.appendChild(val); li.appendChild(del);
         ol.appendChild(li);
@@ -712,10 +861,20 @@
     state.records = []; state.tees = {}; state.guests = [];
     write(K_REC, state.records); write(K_TEE, state.tees); write("jb4.longest.guests", state.guests);
     renderAll();
+    setStatus("이 폰의 기록만 지웠습니다. 공용 DB 기록은 다음 동기화 때 다시 내려옵니다.");
   };
 
-  function renderAll(){ renderJo(); renderFlow(); renderBoard(); renderManualTargets(); }
+  function renderAll(){ renderJo(); renderFlow(); renderBoard(); renderManualTargets(); renderSync(); }
+
+  $("syncBtn").onclick = function(){ syncNow(); };
+  document.addEventListener("visibilitychange", function(){
+    if (!document.hidden) syncNow();
+  });
+  window.addEventListener("online", function(){ syncNow(); });
+  setInterval(function(){ if (!document.hidden) syncNow(); }, 30000);
+
   renderAll();
+  syncNow();
 })();
 </script>
 </body>
