@@ -129,6 +129,10 @@
     font-family:var(--sans); font-size:15px; font-weight:700;
     border:1.5px solid var(--jade); background:var(--panel); color:var(--jade)}
   .help{font-size:12.5px; color:var(--ink-2); line-height:1.5}
+  .help b{color:var(--ink)}
+  ol.how{margin:0; padding-left:20px; font-size:12.5px; color:var(--ink-2); line-height:1.75}
+  ol.how li{margin-bottom:2px}
+  ol.how b{color:var(--ink)}
   .coord{font-family:var(--mono); font-size:11.5px; color:var(--ink-2); word-break:break-all}
   footer{font-size:12px; color:var(--ink-2); line-height:1.6; text-align:center}
   hr.rule{border:none; border-top:1px solid var(--mist); margin:2px 0}
@@ -166,7 +170,14 @@
   <details>
     <summary>GPS가 막히면 — 좌표 직접 입력</summary>
     <div class="inner">
-      <p class="help">지도 앱에서 지점을 길게 눌러 좌표를 복사한 뒤 붙여넣으세요. <span class="coord">37.831234, 127.612345</span> 형식입니다.</p>
+      <p class="help"><b>네이버지도·카카오맵은 좌표를 안 보여줍니다.</b> 구글 지도를 쓰세요.</p>
+      <ol class="how">
+        <li><b>구글 지도</b> 앱을 열고 낙구 지점(또는 티박스)에 섭니다</li>
+        <li>지도에서 그 지점을 <b>길게 누릅니다</b> → 빨간 핀이 꽂힙니다</li>
+        <li>화면 아래 카드에 <span class="coord">37.831234, 127.612345</span> 가 뜹니다 → <b>탭하면 복사</b>됩니다</li>
+        <li>아래 칸에 붙여넣기</li>
+      </ol>
+      <p class="help">아이폰 <b>나침반</b> 앱 아래쪽에 뜨는 <span class="coord">37°49'52"N 127°36'43"E</span> 형식도 그대로 붙여넣으면 됩니다.</p>
       <label class="fld"><span>어느 측정인가</span><select id="mTarget"></select></label>
       <label class="fld"><span>좌표</span><input type="text" id="mCoord" placeholder="위도, 경도" autocomplete="off"></label>
       <button class="act" id="mApply">이 좌표로 기록</button>
@@ -189,6 +200,7 @@
 
   <footer>
     측정값은 이 브라우저에만 저장됩니다. 창을 닫아도 남습니다.<br>
+    ±오차는 그 순간 GPS가 보고한 정확도입니다. 기기명보다 이 값이 신뢰도 기준입니다.<br>
     페어웨이 안착 여부는 사람이 눈으로 판정합니다.
   </footer>
 </div>
@@ -238,6 +250,27 @@
     if (c && applyRoster(c)) return;
     applyRoster(DEFAULT_ROSTER);
   })();
+
+  /* 기록한 기기 — 안드로이드는 모델명이 UA 에 있고, iOS 는 모델을 알 수 없다(애플이 막음).
+     GPS 품질의 실제 지표는 각 측정에 찍히는 ±오차값이다. 기기명은 참고용. */
+  var DEVICE = (function(){
+    var ua = navigator.userAgent || "";
+    var m = ua.match(/Android[^;]*;\s*([^;)]+?)(?:\s+Build)?\)/);
+    if (m) return m[1].trim();
+    if (/iPad/.test(ua))   return "iPad";
+    if (/iPhone/.test(ua)){
+      var v = ua.match(/OS (\d+)[_.](\d+)/);
+      return "iPhone" + (v ? " iOS" + v[1] + "." + v[2] : "");
+    }
+    if (/Macintosh/.test(ua)) return "Mac";
+    if (/Windows/.test(ua))   return "Windows";
+    return "기타";
+  })();
+  if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues){
+    navigator.userAgentData.getHighEntropyValues(["model"]).then(function(d){
+      if (d && d.model) DEVICE = d.model;
+    }).catch(function(){});
+  }
 
   var $ = function(id){ return document.getElementById(id); };
   function read(k,d){ try { return JSON.parse(localStorage.getItem(k)||d); } catch(e){ return JSON.parse(d); } }
@@ -315,7 +348,7 @@
     }
     id = navigator.geolocation.watchPosition(function(pos){
       var c = pos.coords;
-      if (!best || c.accuracy < best.acc) best = { lat:c.latitude, lng:c.longitude, acc:c.accuracy };
+      if (!best || c.accuracy < best.acc) best = { lat:c.latitude, lng:c.longitude, acc:c.accuracy, dev:DEVICE };
     }, function(err){
       clearInterval(timer);
       if (id!=null) navigator.geolocation.clearWatch(id);
@@ -345,7 +378,8 @@
   function upsertRecord(p, ball){
     var old = recOf(p.name);
     var rec = { name:p.name, sex:p.sex, jo:p.jo, hole:p.hole,
-                tee:(p.sex==="여"?"R":"W"), fw:(old?old.fw:1), ball:ball, at:new Date().toISOString() };
+                tee:(p.sex==="여"?"R":"W"), fw:(old?old.fw:1), ball:ball,
+                dev:(ball.dev || DEVICE), at:new Date().toISOString() };
     if (old) state.records.splice(state.records.indexOf(old), 1, rec);
     else state.records.push(rec);
     write(K_REC, state.records);
@@ -537,6 +571,7 @@
         idx.textContent = x.r.fw ? pos : "—";
         var nm = document.createElement("div"); nm.className = "nm";
         nm.innerHTML = x.r.name + "<em>" + (x.r.jo ? x.r.jo + " · " : "") + HOLES[x.r.hole].label +
+                       (x.r.dev ? " · " + x.r.dev : "") +
                        (x.r.fw ? "" : " · 페어웨이 벗어남") + "</em>";
         var val = document.createElement("div"); val.className = "val";
         val.innerHTML = Math.round(x.m.dist) + "m<small>±" + x.m.err.toFixed(1) + "m</small>";
@@ -575,12 +610,34 @@
     });
   }
 
-  function parseCoord(s){
-    var m = String(s).match(/(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)/);
-    if (!m) return null;
-    var lat = parseFloat(m[1]), lng = parseFloat(m[2]);
+  /* 십진수(37.831234, 127.612345) 와 도분초(37°49'52"N 127°36'43"E) 를 모두 받는다 */
+  function parseCoord(str){
+    var s = String(str).trim(), lat, lng;
+    if (/[°'\u2032"\u2033]/.test(s)){
+      var re = /(\d+(?:\.\d+)?)\s*[°\s]\s*(?:(\d+(?:\.\d+)?)\s*['\u2032\s]\s*)?(?:(\d+(?:\.\d+)?)\s*["\u2033]?\s*)?([NSEWnsew])?/g;
+      var vals = [], m;
+      while ((m = re.exec(s)) !== null){
+        var v = parseFloat(m[1]) + (parseFloat(m[2]||0))/60 + (parseFloat(m[3]||0))/3600;
+        var h = (m[4]||"").toUpperCase();
+        if (h === "S" || h === "W") v = -v;
+        vals.push(v);
+        if (vals.length === 2) break;
+      }
+      if (vals.length < 2) return null;
+      lat = vals[0]; lng = vals[1];
+    } else {
+      /* 앞뒤에 '위도'·'경도' 같은 글자가 붙어도 되도록 소수점 숫자만 뽑는다 */
+      var nums = s.match(/-?\d+\.\d+/g);
+      if (!nums || nums.length < 2){
+        var d = s.match(/(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)/);
+        if (!d) return null;
+        nums = [d[1], d[2]];
+      }
+      lat = parseFloat(nums[0]); lng = parseFloat(nums[1]);
+    }
+    if (!isFinite(lat) || !isFinite(lng)) return null;
     if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
-    return { lat:lat, lng:lng, acc:5 };
+    return { lat:lat, lng:lng, acc:5, dev:DEVICE + " (직접입력)" };
   }
   $("mApply").onclick = function(){
     var v = $("mTarget").value;
@@ -639,6 +696,7 @@
         out.push(" " + (x.r.fw ? pos+"위" : "제외") + " " + x.r.name + " " +
                  Math.round(x.m.dist) + "m (±" + x.m.err.toFixed(1) + "m) · " +
                  (x.r.jo ? x.r.jo + " " : "") + HOLES[x.r.hole].label +
+                 (x.r.dev ? " · " + x.r.dev : "") +
                  (x.r.fw ? "" : " · 페어웨이 벗어남"));
       });
     });
