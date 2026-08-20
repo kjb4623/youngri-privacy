@@ -13,10 +13,10 @@
   :root{
     --ground:#F7F4EA; --panel:#FFFDF7;
     --ink:#16281E; --ink-2:#4A5C52;
-    --jade:#1D5236; --jade-soft:#E4EDE7;
+    --jade:#1D5236; --jade-soft:#E7EFEA;
     --gold:#A9822B; --gold-soft:#F6EDD6;
     --clay:#B3412F; --clay-soft:#F8E7E3;
-    --red-tee:#B03A54; --red-soft:#F7E5EA;
+    --red-tee:#B03A54;
     --mist:#DED8C8;
     --shadow:0 1px 0 rgba(22,40,30,.08), 0 6px 18px -12px rgba(22,40,30,.5);
     --sans:'IBM Plex Sans KR', system-ui, sans-serif;
@@ -30,59 +30,68 @@
 
   header{display:flex; flex-direction:column; gap:4px}
   .eyebrow{font-size:12px; letter-spacing:.18em; color:var(--gold); font-weight:600}
-  h1{font-family:var(--serif); font-weight:700; font-size:30px; line-height:1.15; margin:0; text-wrap:balance}
+  h1{font-family:var(--serif); font-weight:700; font-size:30px; line-height:1.15; margin:0}
   .sub{font-size:13px; color:var(--ink-2)}
 
   .card{background:var(--panel); border:1px solid var(--mist); border-radius:14px; padding:16px; box-shadow:var(--shadow)}
   .card > h2{font-size:12px; font-weight:700; letter-spacing:.14em; color:var(--ink-2); margin:0 0 10px}
   .row{display:flex; gap:8px; flex-wrap:wrap}
-  .seg{display:flex; gap:6px}
 
-  .chip{flex:1 1 auto; min-height:52px; padding:8px 12px; border-radius:11px; cursor:pointer;
+  .chip{flex:1 1 28%; min-height:56px; padding:8px 10px; border-radius:11px; cursor:pointer;
     border:1.5px solid var(--mist); background:var(--panel); color:var(--ink);
-    font-family:var(--sans); font-size:15px; font-weight:600; line-height:1.25;
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
-    transition:background .12s, border-color .12s, color .12s}
+    font-family:var(--sans); font-size:16px; font-weight:700; line-height:1.2;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px}
   .chip small{font-size:11px; font-weight:500; color:var(--ink-2)}
   .chip[aria-pressed="true"]{background:var(--jade); border-color:var(--jade); color:#fff}
   .chip[aria-pressed="true"] small{color:rgba(255,255,255,.78)}
-  .chip.red[aria-pressed="true"]{background:var(--red-tee); border-color:var(--red-tee)}
-  .seg .chip{min-height:46px; font-size:14px}
-  .chip:focus-visible, button:focus-visible, input:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
+  .chip:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
 
-  button.act{width:100%; min-height:58px; border-radius:12px; cursor:pointer;
-    font-family:var(--sans); font-size:16px; font-weight:700;
-    border:1.5px solid var(--jade); background:var(--jade); color:#fff;
-    display:flex; align-items:center; justify-content:center; gap:8px}
-  button.act.ghost{background:var(--panel); color:var(--jade)}
-  button.act.big{min-height:72px; font-size:19px; background:var(--gold); border-color:var(--gold)}
-  button.act[disabled]{opacity:.4; cursor:not-allowed}
-  button.act .num{font-family:var(--serif); font-size:20px; opacity:.75}
+  /* 선택된 조 바 */
+  .jobar{display:flex; align-items:center; justify-content:space-between; gap:10px}
+  .jobar .t{font-family:var(--serif); font-size:22px; font-weight:700; line-height:1.1}
+  .jobar .m{font-size:13px; color:var(--ink-2)}
+  .jobar .m b{color:var(--ink); font-weight:600}
+
+  /* 단계 */
+  .step{margin-bottom:16px}
+  .step:last-child{margin-bottom:0}
+  .step-h{display:flex; align-items:baseline; gap:8px; margin-bottom:8px}
+  .step-n{font-family:var(--serif); font-size:19px; font-weight:700; color:var(--gold)}
+  .step-t{font-size:14px; font-weight:700}
+  .step-s{font-size:12px; color:var(--ink-2); margin-left:auto; font-variant-numeric:tabular-nums}
+  .step.locked{opacity:.45}
+
+  .task{border:1.5px solid var(--mist); border-radius:12px; padding:11px 12px; margin-bottom:8px; background:var(--ground)}
+  .task:last-child{margin-bottom:0}
+  .task.done{background:var(--jade-soft); border-color:var(--jade)}
+  .task.lead{background:var(--gold-soft); border-color:var(--gold)}
+  .task-top{display:flex; align-items:center; gap:9px}
+  .tt{font-size:15.5px; font-weight:700}
+  .teetag{font-size:11px; font-weight:700; padding:2px 7px; border-radius:5px; color:#fff; background:var(--jade)}
+  .teetag.r{background:var(--red-tee)}
+  .task-val{margin-left:auto; text-align:right; font-variant-numeric:tabular-nums}
+  .task-val .big{font-size:19px; font-weight:700}
+  .task-val .sm{font-size:11px; color:var(--ink-2); display:block}
+  .task-val .todo{font-size:13px; color:var(--ink-2)}
+  .task-bot{display:flex; gap:8px; align-items:center; margin-top:9px}
+
+  button.go{flex:1; min-height:46px; border-radius:10px; cursor:pointer;
+    font-family:var(--sans); font-size:15px; font-weight:700;
+    border:1.5px solid var(--jade); background:var(--jade); color:#fff}
+  button.go.again{background:var(--panel); color:var(--jade); flex:0 0 auto; padding:0 14px}
+  button.go[disabled]{opacity:.4; cursor:not-allowed}
+  .fw{display:flex; gap:5px; flex:0 0 auto}
+  .fw button{min-height:46px; padding:0 11px; border-radius:10px; cursor:pointer;
+    border:1.5px solid var(--mist); background:var(--panel); color:var(--ink-2);
+    font-family:var(--sans); font-size:13.5px; font-weight:600}
+  .fw button[aria-pressed="true"]{background:var(--ink); border-color:var(--ink); color:#fff}
+  .fw button.no[aria-pressed="true"]{background:var(--clay); border-color:var(--clay)}
   button.mini{min-height:36px; padding:0 12px; border-radius:9px; cursor:pointer;
     border:1.5px solid var(--mist); background:var(--panel); color:var(--ink-2);
     font-family:var(--sans); font-size:13px; font-weight:600}
 
-  /* 기준점 현황 */
-  .tees{display:flex; flex-direction:column; gap:8px}
-  .teebar{display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:10px;
-    padding:10px 12px; border-radius:10px; background:var(--ground); border:1px solid var(--mist)}
-  .teebar.active{background:var(--gold-soft); border-color:var(--gold)}
-  .teetag{font-size:12px; font-weight:700; padding:3px 8px; border-radius:6px; color:#fff; background:var(--ink-2)}
-  .teetag.w{background:var(--jade)} .teetag.r{background:var(--red-tee)}
-  .teeinfo{font-size:13px; color:var(--ink-2); font-variant-numeric:tabular-nums}
-  .teeinfo b{color:var(--ink); font-weight:600}
-
-  .plaque{border:2px solid var(--gold); border-radius:12px; background:var(--gold-soft);
-    padding:14px 16px 16px; text-align:center; display:none; margin-top:14px}
-  .plaque.show{display:block}
-  .plaque .who{font-size:13px; font-weight:600; color:var(--ink-2); margin-bottom:2px}
-  .plaque .dist{font-variant-numeric:tabular-nums; font-size:58px; font-weight:700;
-    line-height:1; letter-spacing:-.02em; color:var(--ink)}
-  .plaque .dist span{font-size:22px; font-weight:600; margin-left:3px}
-  .plaque .err{font-size:13px; color:var(--ink-2); margin-top:6px; font-variant-numeric:tabular-nums}
-
   .status{min-height:22px; font-size:13.5px; color:var(--ink-2); text-align:center;
-    font-variant-numeric:tabular-nums; margin-top:10px}
+    font-variant-numeric:tabular-nums; margin-top:12px}
   .status.busy{color:var(--jade); font-weight:600}
   .status.err{color:var(--clay); font-weight:600}
 
@@ -99,10 +108,10 @@
   .nm em{font-style:normal; font-size:11.5px; color:var(--ink-2); font-weight:500; display:block}
   .val{font-variant-numeric:tabular-nums; font-weight:700; font-size:17px; text-align:right}
   .val small{font-size:11px; font-weight:500; color:var(--ink-2); display:block}
-  .del{border:none; background:none; color:var(--ink-2); font-size:18px; cursor:pointer; padding:0 2px; line-height:1}
+  .del{border:none; background:none; color:var(--ink-2); font-size:18px; cursor:pointer; padding:0 2px}
   .empty{font-size:13.5px; color:var(--ink-2); padding:4px 2px}
 
-  .flag{display:flex; gap:8px; align-items:flex-start; margin-top:10px; padding:10px 12px;
+  .flag{display:flex; gap:8px; margin-top:10px; padding:10px 12px;
     background:var(--clay-soft); border:1px solid var(--clay); border-radius:10px;
     font-size:13px; line-height:1.45}
   .flag b{color:var(--clay)}
@@ -110,10 +119,15 @@
   details{border:1px solid var(--mist); border-radius:12px; background:var(--panel); padding:0 14px}
   summary{cursor:pointer; padding:13px 0; font-size:14px; font-weight:600; color:var(--ink-2)}
   details[open] summary{border-bottom:1px solid var(--mist); margin-bottom:12px}
-  .manual{display:flex; flex-direction:column; gap:9px; padding-bottom:14px}
+  .inner{display:flex; flex-direction:column; gap:10px; padding-bottom:14px}
   label.fld{display:flex; flex-direction:column; gap:4px; font-size:12px; font-weight:600; color:var(--ink-2)}
-  input[type=text]{font-family:var(--mono); font-size:15px; padding:11px 12px; border-radius:9px;
-    border:1.5px solid var(--mist); background:var(--ground); color:var(--ink)}
+  input[type=text], select{font-size:15px; padding:11px 12px; border-radius:9px;
+    border:1.5px solid var(--mist); background:var(--ground); color:var(--ink); font-family:var(--sans)}
+  input[type=text]{font-family:var(--mono)}
+  input.name{font-family:var(--sans)}
+  button.act{width:100%; min-height:46px; border-radius:10px; cursor:pointer;
+    font-family:var(--sans); font-size:15px; font-weight:700;
+    border:1.5px solid var(--jade); background:var(--panel); color:var(--jade)}
   .help{font-size:12.5px; color:var(--ink-2); line-height:1.5}
   .coord{font-family:var(--mono); font-size:11.5px; color:var(--ink-2); word-break:break-all}
   footer{font-size:12px; color:var(--ink-2); line-height:1.6; text-align:center}
@@ -125,51 +139,17 @@
   <header>
     <div class="eyebrow">제4회 JB대전 · 강촌엘리시안CC</div>
     <h1>롱기스트 계측</h1>
-    <div class="sub">선수를 고른 뒤 ① 티박스 → ② 낙구 지점 순으로 측정합니다.</div>
+    <div class="sub">심판용 · 조를 고르면 잴 순서가 그대로 뜹니다.</div>
   </header>
 
-  <section class="card">
-    <h2>측정 홀</h2>
-    <div class="row" id="holes"></div>
+  <section class="card" id="joCard">
+    <h2 id="joTitle">담당 조</h2>
+    <div id="joBody"></div>
   </section>
 
-  <section class="card">
-    <h2>선수</h2>
-    <div class="row" id="players"></div>
-    <label class="fld" style="margin-top:12px">
-      <span>명단에 없으면 직접 입력</span>
-      <input type="text" id="freeName" placeholder="이름" autocomplete="off">
-    </label>
-
-    <h2 style="margin:16px 0 8px">사용 티</h2>
-    <div class="seg" id="teeSeg">
-      <button class="chip" data-tee="W" aria-pressed="true">화이트<small>남자부</small></button>
-      <button class="chip red" data-tee="R" aria-pressed="false">레드<small>여자부</small></button>
-    </div>
-
-    <h2 style="margin:16px 0 8px">페어웨이 안착</h2>
-    <div class="seg" id="fwSeg">
-      <button class="chip" data-fw="1" aria-pressed="true">안착</button>
-      <button class="chip" data-fw="0" aria-pressed="false">벗어남<small>기록 제외</small></button>
-    </div>
-
-    <div style="margin-top:16px; display:flex; flex-direction:column; gap:10px">
-      <button class="act ghost" id="teeBtn"><span class="num">①</span> 티박스 측정</button>
-      <button class="act big" id="ballBtn" disabled><span class="num">②</span> 낙구 지점 측정</button>
-    </div>
+  <section class="card" id="flowCard" hidden>
+    <div id="flow"></div>
     <div class="status" id="status"></div>
-
-    <div class="plaque" id="plaque">
-      <div class="who" id="plaqueWho"></div>
-      <div class="dist"><span id="plaqueDist">0</span></div>
-      <div class="err" id="plaqueErr"></div>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>티 기준점</h2>
-    <div class="tees" id="teeStatus"></div>
-    <p class="help" style="margin:10px 0 0">같은 티박스를 여러 번 재면 가중평균으로 합쳐져 기준이 정밀해집니다. 이전 기록의 거리도 같이 다시 계산됩니다.</p>
   </section>
 
   <section class="card board">
@@ -185,12 +165,25 @@
 
   <details>
     <summary>GPS가 막히면 — 좌표 직접 입력</summary>
-    <div class="manual">
-      <p class="help">지도 앱에서 지점을 길게 눌러 좌표를 복사한 뒤 붙여넣으세요. <span class="coord">37.831234, 127.612345</span> 형식입니다. 위에서 고른 홀·티·선수 기준으로 처리됩니다.</p>
-      <label class="fld"><span>티박스 좌표</span><input type="text" id="mTee" placeholder="위도, 경도" autocomplete="off"></label>
-      <button class="act ghost" id="mTeeBtn" style="min-height:46px">티 기준점에 추가</button>
-      <label class="fld"><span>낙구 지점 좌표</span><input type="text" id="mBall" placeholder="위도, 경도" autocomplete="off"></label>
-      <button class="act ghost" id="mBallBtn" style="min-height:46px">이 좌표로 기록</button>
+    <div class="inner">
+      <p class="help">지도 앱에서 지점을 길게 눌러 좌표를 복사한 뒤 붙여넣으세요. <span class="coord">37.831234, 127.612345</span> 형식입니다.</p>
+      <label class="fld"><span>어느 측정인가</span><select id="mTarget"></select></label>
+      <label class="fld"><span>좌표</span><input type="text" id="mCoord" placeholder="위도, 경도" autocomplete="off"></label>
+      <button class="act" id="mApply">이 좌표로 기록</button>
+    </div>
+  </details>
+
+  <details>
+    <summary>명단에 없는 사람 추가</summary>
+    <div class="inner">
+      <p class="help">갤러리·게스트도 「천하장사」 대상이면 여기서 추가하세요. 현재 고른 조의 홀에서 측정합니다.</p>
+      <label class="fld"><span>이름</span><input type="text" class="name" id="gName" placeholder="이름" autocomplete="off"></label>
+      <label class="fld"><span>사용 티</span></label>
+      <div class="row" id="gTee">
+        <button class="chip" data-tee="W" aria-pressed="true">화이트<small>남자부</small></button>
+        <button class="chip" data-tee="R" aria-pressed="false">레드<small>여자부</small></button>
+      </div>
+      <button class="act" id="gAdd">추가</button>
     </div>
   </details>
 
@@ -204,96 +197,120 @@
 (function(){
   "use strict";
 
-  var HOLES = [
-    { id:"V6", label:"VALLEY 6번", note:"1·2·5조 · 파5", players:[] },
-    { id:"L2", label:"LAKE 2번",   note:"3·4조 · 파5",   players:[] }
-  ];
-  var FEMALE = {};
-  var K_TEE = "jb4.longest.tees", K_REC = "jb4.longest.records2", K_ROSTER = "jb4.longest.roster";
+  var HOLES = {
+    V6: { id:"V6", label:"VALLEY 6번", note:"파5" },
+    L2: { id:"L2", label:"LAKE 2번",   note:"파5" }
+  };
+  var PLAYERS = [];   /* {jo, name, sex, hole} */
+  var K_TEE="jb4.longest.tees", K_REC="jb4.longest.rec3", K_ROSTER="jb4.longest.roster", K_JO="jb4.longest.jo";
 
   function applyRoster(raw){
-    /* 형식:  <홀ID>|<조>,<이름>,<남|여>;…   여러 홀은 / 로 구분 */
-    var ok = false;
+    var list = [];
     raw.split("/").forEach(function(block){
       var bits = block.split("|");
       if (bits.length !== 2) return;
-      var hole = HOLES.filter(function(h){ return h.id === bits[0].trim(); })[0];
-      if (!hole) return;
-      var list = [];
+      var hid = bits[0].trim();
+      if (!HOLES[hid]) return;
       bits[1].split(";").forEach(function(e){
         var f = e.split(",");
         if (f.length < 2) return;
-        var jo = f[0].trim(), nm = f[1].trim(), sx = (f[2]||"").trim();
+        var nm = (f[1]||"").trim();
         if (!nm) return;
-        list.push([jo, nm]);
-        if (sx === "여") FEMALE[nm] = 1;
+        list.push({ jo:(f[0]||"").trim(), name:nm, sex:((f[2]||"").trim()==="여"?"여":"남"), hole:hid });
       });
-      if (list.length){ hole.players = list; ok = true; }
     });
-    return ok;
+    if (!list.length) return false;
+    PLAYERS = list; return true;
   }
-
   var DEFAULT_ROSTER =
     "V6|1조,서민지,여;1조,정종민,남;2조,성우진,남;2조,최아영,여;5조,김정은,여;5조,이은제,남" +
     "/L2|3조,김주아,여;3조,윤서래,여;4조,이혜림,여;4조,지재현,남";
 
   (function initRoster(){
-    var m = (location.hash || "").match(/[#&]p=([^&]+)/), raw = null;
+    var m = (location.hash||"").match(/[#&]p=([^&]+)/), raw = null;
     if (m){ try { raw = decodeURIComponent(m[1]); } catch(e){} }
     if (raw && applyRoster(raw)){
       try { localStorage.setItem(K_ROSTER, raw); } catch(e){}
-      if (history.replaceState) history.replaceState(null, "", location.pathname + location.search);
+      if (history.replaceState) history.replaceState(null,"",location.pathname+location.search);
       return;
     }
-    var cached = null;
-    try { cached = localStorage.getItem(K_ROSTER); } catch(e){}
-    if (cached && applyRoster(cached)) return;
+    var c = null; try { c = localStorage.getItem(K_ROSTER); } catch(e){}
+    if (c && applyRoster(c)) return;
     applyRoster(DEFAULT_ROSTER);
   })();
 
   var $ = function(id){ return document.getElementById(id); };
-  function read(k, dflt){ try { return JSON.parse(localStorage.getItem(k) || dflt); } catch(e){ return JSON.parse(dflt); } }
-  function write(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+  function read(k,d){ try { return JSON.parse(localStorage.getItem(k)||d); } catch(e){ return JSON.parse(d); } }
+  function write(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+  var teeName = function(t){ return t==="R" ? "레드" : "화이트"; };
 
   var state = {
-    hole:HOLES[0].id, name:"", tee:"W", fw:1,
-    tees:read(K_TEE, "{}"),        /* "V6:W" -> [{lat,lng,acc}, …] */
-    records:read(K_REC, "[]")      /* {hole,tee,name,fw,ball:{lat,lng,acc},at} */
+    jo: (function(){ try { return localStorage.getItem(K_JO) || null; } catch(e){ return null; } })(),
+    tees: read(K_TEE,"{}"),      /* "V6:W" -> [{lat,lng,acc}…] */
+    records: read(K_REC,"[]"),   /* {name,sex,jo,hole,tee,fw,ball,at} — 이름당 1건(덮어쓰기) */
+    guests: read("jb4.longest.guests","[]")  /* {jo,name,sex,hole} */
   };
 
   /* ── 계산 ─────────────────────────────── */
-  function distance(a, b){
-    var R = 6371008.8, r = Math.PI/180;
-    var p1 = a.lat*r, p2 = b.lat*r;
-    var dp = (b.lat-a.lat)*r, dl = (b.lng-a.lng)*r;
-    var s = Math.sin(dp/2)*Math.sin(dp/2) + Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);
-    return 2*R*Math.asin(Math.min(1, Math.sqrt(s)));
+  function distance(a,b){
+    var R=6371008.8, r=Math.PI/180;
+    var p1=a.lat*r, p2=b.lat*r, dp=(b.lat-a.lat)*r, dl=(b.lng-a.lng)*r;
+    var s=Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);
+    return 2*R*Math.asin(Math.min(1,Math.sqrt(s)));
   }
-  /* 정확도 가중평균 — 오차가 작은 측정에 더 큰 가중치(w = 1/acc²) */
   function teeRef(key){
-    var arr = state.tees[key] || [];
+    var arr = state.tees[key]||[];
     if (!arr.length) return null;
-    var sw = 0, sla = 0, sln = 0;
-    arr.forEach(function(p){
-      var w = 1 / Math.max(1, p.acc * p.acc);
-      sw += w; sla += w * p.lat; sln += w * p.lng;
-    });
+    var sw=0, sla=0, sln=0;
+    arr.forEach(function(p){ var w=1/Math.max(1,p.acc*p.acc); sw+=w; sla+=w*p.lat; sln+=w*p.lng; });
     return { lat:sla/sw, lng:sln/sw, acc:1/Math.sqrt(sw), n:arr.length };
   }
-  function teeKey(){ return state.hole + ":" + state.tee; }
+  var keyOf = function(h,t){ return h+":"+t; };
+
+  function roster(){ return PLAYERS.concat(state.guests); }
+  function joList(){
+    var seen = {}, out = [];
+    roster().forEach(function(p){
+      if (!p.jo) return;
+      if (!seen[p.jo]){ seen[p.jo] = { jo:p.jo, hole:p.hole, n:0 }; out.push(seen[p.jo]); }
+      seen[p.jo].n++;
+    });
+    out.sort(function(a,b){ return (parseInt(a.jo,10)||99) - (parseInt(b.jo,10)||99); });
+    return out;
+  }
+  function joPlayers(){ return roster().filter(function(p){ return p.jo === state.jo; }); }
+  function joHole(){ var p = joPlayers()[0]; return p ? p.hole : null; }
+  function neededTees(){
+    var s = {}, out = [];
+    joPlayers().forEach(function(p){
+      var t = p.sex === "여" ? "R" : "W";
+      if (!s[t]){ s[t] = 1; out.push(t); }
+    });
+    out.sort();                                   /* R(레드) 먼저, W 나중 — 알파벳순 */
+    return out;
+  }
+  function recOf(name){
+    for (var i=0;i<state.records.length;i++) if (state.records[i].name === name) return state.records[i];
+    return null;
+  }
+  function measure(rec){
+    var ref = teeRef(keyOf(rec.hole, rec.tee));
+    if (!ref) return null;
+    return { dist:distance(ref, rec.ball), err:Math.sqrt(ref.acc*ref.acc + rec.ball.acc*rec.ball.acc) };
+  }
 
   /* ── GPS ──────────────────────────────── */
   function sample(seconds, onTick, done, fail){
     if (!navigator.geolocation){ fail("이 브라우저에서 위치 기능을 쓸 수 없습니다."); return; }
-    var best = null, id, t0 = Date.now();
+    var best=null, id, t0=Date.now();
     var timer = setInterval(function(){
       var left = seconds - Math.floor((Date.now()-t0)/1000);
       onTick(Math.max(0,left), best);
-      if (left <= 0) finish();
+      if (left<=0) finish();
     }, 250);
     function finish(){
       clearInterval(timer);
-      if (id != null) navigator.geolocation.clearWatch(id);
+      if (id!=null) navigator.geolocation.clearWatch(id);
       if (best) done(best); else fail("위치를 잡지 못했습니다. 하늘이 트인 곳에서 다시 시도하세요.");
     }
     id = navigator.geolocation.watchPosition(function(pos){
@@ -301,158 +318,206 @@
       if (!best || c.accuracy < best.acc) best = { lat:c.latitude, lng:c.longitude, acc:c.accuracy };
     }, function(err){
       clearInterval(timer);
-      if (id != null) navigator.geolocation.clearWatch(id);
-      fail(err.code === 1
+      if (id!=null) navigator.geolocation.clearWatch(id);
+      fail(err.code===1
         ? "위치 권한이 거부됐습니다. 브라우저 설정에서 이 사이트의 위치 접근을 허용하거나, 맨 아래 '좌표 직접 입력'을 쓰세요."
-        : err.code === 3 ? "위치 확인이 지연됩니다. 다시 시도하세요."
+        : err.code===3 ? "위치 확인이 지연됩니다. 다시 시도하세요."
         : "위치를 가져오지 못했습니다. 맨 아래 '좌표 직접 입력'을 쓰세요.");
-    }, { enableHighAccuracy:true, maximumAge:0, timeout:seconds*1000 + 4000 });
+    }, { enableHighAccuracy:true, maximumAge:0, timeout:seconds*1000+4000 });
+  }
+  function setStatus(m, cls){
+    var el=$("status"); el.textContent=m; el.className="status"+(cls?" "+cls:"");
   }
 
-  function setStatus(msg, cls){
-    var el = $("status"); el.textContent = msg;
-    el.className = "status" + (cls ? " " + cls : "");
-  }
-  function nameNow(){ return $("freeName").value.trim() || state.name; }
-
-  /* ── 렌더 ─────────────────────────────── */
-  function currentHole(){ return HOLES.filter(function(h){ return h.id === state.hole; })[0]; }
-
-  function renderHoles(){
-    var box = $("holes"); box.innerHTML = "";
-    HOLES.forEach(function(h){
-      var b = document.createElement("button");
-      b.className = "chip"; b.type = "button";
-      b.setAttribute("aria-pressed", String(h.id === state.hole));
-      b.innerHTML = "<span>" + h.label + "</span><small>" + h.note + "</small>";
-      b.onclick = function(){
-        state.hole = h.id; state.name = ""; $("freeName").value = "";
-        renderAll();
-      };
-      box.appendChild(b);
-    });
-  }
-
-  function renderPlayers(){
-    var box = $("players"); box.innerHTML = "";
-    var ps = currentHole().players;
-    if (!ps.length){
-      box.innerHTML = '<p class="help" style="margin:0">이 홀의 선수 명단이 없습니다. 아래 칸에 이름을 직접 입력하세요.</p>';
-      return;
-    }
-    ps.forEach(function(p){
-      var b = document.createElement("button");
-      b.className = "chip"; b.type = "button"; b.style.flex = "1 1 30%";
-      b.setAttribute("aria-pressed", String(p[1] === state.name));
-      b.innerHTML = "<span>" + p[1] + "</span><small>" + p[0] + "</small>";
-      b.onclick = function(){
-        state.name = p[1]; $("freeName").value = "";
-        setTee(FEMALE[p[1]] ? "R" : "W");
-        renderPlayers(); renderTees(); syncButtons();
-      };
-      box.appendChild(b);
-    });
-  }
-
-  function setTee(v){
-    state.tee = v;
-    Array.prototype.forEach.call($("teeSeg").children, function(b){
-      b.setAttribute("aria-pressed", String(b.dataset.tee === v));
-    });
-  }
-  function setFw(v){
-    state.fw = v;
-    Array.prototype.forEach.call($("fwSeg").children, function(b){
-      b.setAttribute("aria-pressed", String(Number(b.dataset.fw) === v));
-    });
-  }
-
-  function renderTees(){
-    var box = $("teeStatus"); box.innerHTML = "";
-    [["W","화이트"],["R","레드"]].forEach(function(t){
-      var key = state.hole + ":" + t[0], ref = teeRef(key);
-      var el = document.createElement("div");
-      el.className = "teebar" + (t[0] === state.tee ? " active" : "");
-      var tag = document.createElement("span");
-      tag.className = "teetag " + t[0].toLowerCase(); tag.textContent = t[1];
-      var info = document.createElement("span");
-      info.className = "teeinfo";
-      info.innerHTML = ref
-        ? "<b>" + ref.n + "회 평균</b> · ±" + ref.acc.toFixed(1) + "m"
-        : "측정 전";
-      var del = document.createElement("button");
-      del.className = "mini"; del.type = "button"; del.textContent = "지우기";
-      del.style.visibility = ref ? "visible" : "hidden";
-      del.onclick = function(){
-        delete state.tees[key]; write(K_TEE, state.tees); renderAll();
-      };
-      el.appendChild(tag); el.appendChild(info); el.appendChild(del);
-      box.appendChild(el);
-    });
-  }
-
-  function syncButtons(){
-    var ref = teeRef(teeKey());
-    $("ballBtn").disabled = !ref;
-    if (!ref) setStatus("① 티박스를 먼저 측정하세요 (" + (state.tee === "W" ? "화이트" : "레드") + ").");
-    else if (!nameNow()) setStatus("선수를 고르거나 이름을 입력하세요.");
-    else setStatus("준비됨 — " + nameNow() + " · " + currentHole().label + " · " + (state.tee === "W" ? "화이트" : "레드"));
-  }
-
-  function addTeeSample(pt){
-    var key = teeKey(), ref = teeRef(key);
+  /* ── 저장 ─────────────────────────────── */
+  function addTeeSample(tee, pt){
+    var key = keyOf(joHole(), tee), ref = teeRef(key), warn = null;
     if (ref){
       var off = distance(ref, pt);
-      if (off > 30){
-        setStatus("기존 기준점에서 " + Math.round(off) + "m 떨어져 있습니다. 같은 티박스가 맞는지 확인하세요. (그래도 반영됨)", "err");
-      }
+      if (off > 30) warn = "기존 기준점에서 " + Math.round(off) + "m 떨어져 있습니다. 같은 티박스가 맞는지 확인하세요.";
     }
     if (!state.tees[key]) state.tees[key] = [];
     state.tees[key].push(pt);
     write(K_TEE, state.tees);
-    renderTees(); renderBoard(); syncButtons();
-    return teeRef(key);
+    renderAll();
+    return { ref:teeRef(key), warn:warn };
   }
-
-  function addRecord(ball){
-    state.records.push({
-      hole:state.hole, tee:state.tee, name:nameNow(), fw:state.fw,
-      ball:ball, at:new Date().toISOString()
-    });
+  function upsertRecord(p, ball){
+    var old = recOf(p.name);
+    var rec = { name:p.name, sex:p.sex, jo:p.jo, hole:p.hole,
+                tee:(p.sex==="여"?"R":"W"), fw:(old?old.fw:1), ball:ball, at:new Date().toISOString() };
+    if (old) state.records.splice(state.records.indexOf(old), 1, rec);
+    else state.records.push(rec);
     write(K_REC, state.records);
-    renderBoard();
-    var r = state.records[state.records.length-1], m = measure(r);
-    if (m) showPlaque(r, m);
+    renderAll();
+    return rec;
   }
 
-  /* 기록의 거리는 저장하지 않고 매번 현재 기준점으로 계산 → 기준이 좋아지면 과거 기록도 갱신 */
-  function measure(rec){
-    var ref = teeRef(rec.hole + ":" + rec.tee);
-    if (!ref) return null;
-    return { dist:distance(ref, rec.ball), err:Math.sqrt(ref.acc*ref.acc + rec.ball.acc*rec.ball.acc) };
+  /* ── 렌더: 조 ─────────────────────────── */
+  function renderJo(){
+    var body = $("joBody"), title = $("joTitle");
+    body.innerHTML = "";
+    if (!state.jo){
+      title.textContent = "담당 조";
+      var row = document.createElement("div"); row.className = "row";
+      joList().forEach(function(j){
+        var b = document.createElement("button");
+        b.className = "chip"; b.type = "button";
+        b.setAttribute("aria-pressed","false");
+        b.innerHTML = "<span>" + j.jo + "</span><small>" + HOLES[j.hole].label + "</small>";
+        b.onclick = function(){
+          state.jo = j.jo;
+          try { localStorage.setItem(K_JO, j.jo); } catch(e){}
+          renderAll();
+        };
+        row.appendChild(b);
+      });
+      body.appendChild(row);
+      $("flowCard").hidden = true;
+      return;
+    }
+    title.textContent = "담당 조";
+    var h = joHole();
+    var bar = document.createElement("div"); bar.className = "jobar";
+    var left = document.createElement("div");
+    left.innerHTML = '<div class="t">' + state.jo + '</div><div class="m"><b>' +
+                     HOLES[h].label + '</b> · ' + HOLES[h].note + '</div>';
+    var chg = document.createElement("button");
+    chg.className = "mini"; chg.type = "button"; chg.textContent = "조 바꾸기";
+    chg.onclick = function(){
+      state.jo = null;
+      try { localStorage.removeItem(K_JO); } catch(e){}
+      renderAll();
+    };
+    bar.appendChild(left); bar.appendChild(chg);
+    body.appendChild(bar);
+    $("flowCard").hidden = false;
   }
 
-  function showPlaque(rec, m){
-    $("plaqueWho").textContent = rec.name + " · " + currentHole().label +
-      " · " + (rec.tee === "W" ? "화이트" : "레드") + (rec.fw ? "" : " · 페어웨이 벗어남");
-    $("plaqueDist").innerHTML = Math.round(m.dist) + "<span>m</span>";
-    $("plaqueErr").textContent = "오차 ±" + m.err.toFixed(1) + "m";
-    $("plaque").classList.add("show");
+  /* ── 렌더: 진행 ───────────────────────── */
+  function renderFlow(){
+    var box = $("flow"); box.innerHTML = "";
+    if (!state.jo) return;
+    var hole = joHole(), tees = neededTees(), players = joPlayers();
+
+    /* ① 티박스 */
+    var s1 = document.createElement("div"); s1.className = "step";
+    var doneTee = tees.filter(function(t){ return !!teeRef(keyOf(hole,t)); }).length;
+    s1.innerHTML = '<div class="step-h"><span class="step-n">①</span>' +
+                   '<span class="step-t">티박스 측정</span>' +
+                   '<span class="step-s">' + doneTee + " / " + tees.length + '</span></div>';
+    tees.forEach(function(t){
+      var ref = teeRef(keyOf(hole,t));
+      var who = players.filter(function(p){ return (p.sex==="여"?"R":"W") === t; })
+                       .map(function(p){ return p.name; }).join(" · ");
+      var el = document.createElement("div");
+      el.className = "task" + (ref ? " done" : "");
+      var top = document.createElement("div"); top.className = "task-top";
+      top.innerHTML = '<span class="teetag' + (t==="R"?" r":"") + '">' + teeName(t) + '</span>' +
+                      '<span class="tt">티박스</span>' +
+                      '<span class="task-val">' + (ref
+                        ? '<span class="big">' + ref.n + '회</span><span class="sm">±' + ref.acc.toFixed(1) + 'm</span>'
+                        : '<span class="todo">측정 전</span>') + '</span>';
+      var bot = document.createElement("div"); bot.className = "task-bot";
+      var go = document.createElement("button");
+      go.className = "go" + (ref ? " again" : ""); go.type = "button";
+      go.textContent = ref ? "한 번 더 재기" : (who ? who + " 티박스 측정" : "측정");
+      go.onclick = function(){ runTee(t, go); };
+      bot.appendChild(go);
+      if (ref){
+        var note = document.createElement("span");
+        note.className = "help"; note.style.flex = "1";
+        note.textContent = "여러 번 잴수록 정확해집니다";
+        bot.appendChild(note);
+      }
+      el.appendChild(top); el.appendChild(bot);
+      s1.appendChild(el);
+    });
+    box.appendChild(s1);
+
+    /* ② 낙구 */
+    var s2 = document.createElement("div");
+    var ready = doneTee === tees.length;
+    s2.className = "step" + (ready ? "" : " locked");
+    var doneBall = players.filter(function(p){ return !!recOf(p.name); }).length;
+    s2.innerHTML = '<div class="step-h"><span class="step-n">②</span>' +
+                   '<span class="step-t">낙구 지점 측정</span>' +
+                   '<span class="step-s">' + doneBall + " / " + players.length + '</span></div>';
+    players.forEach(function(p){
+      var t = p.sex==="여" ? "R" : "W";
+      var rec = recOf(p.name), m = rec ? measure(rec) : null;
+      var el = document.createElement("div");
+      el.className = "task" + (rec ? " done" : "");
+      var top = document.createElement("div"); top.className = "task-top";
+      top.innerHTML = '<span class="tt">' + p.name + '</span>' +
+                      '<span class="teetag' + (t==="R"?" r":"") + '">' + teeName(t) + '</span>' +
+                      '<span class="task-val">' + (m
+                        ? '<span class="big">' + Math.round(m.dist) + 'm</span><span class="sm">±' + m.err.toFixed(1) + 'm</span>'
+                        : '<span class="todo">측정 전</span>') + '</span>';
+      var bot = document.createElement("div"); bot.className = "task-bot";
+      var go = document.createElement("button");
+      go.className = "go" + (rec ? " again" : ""); go.type = "button";
+      go.disabled = !ready;
+      go.textContent = rec ? "다시 재기" : "낙구 지점 측정";
+      go.onclick = function(){ runBall(p, go); };
+      bot.appendChild(go);
+      if (rec){
+        var fw = document.createElement("div"); fw.className = "fw";
+        [["1","안착"],["0","벗어남"]].forEach(function(o){
+          var b = document.createElement("button"); b.type = "button";
+          if (o[0]==="0") b.className = "no";
+          b.textContent = o[1];
+          b.setAttribute("aria-pressed", String(String(rec.fw) === o[0]));
+          b.onclick = function(){
+            rec.fw = Number(o[0]); write(K_REC, state.records); renderAll();
+          };
+          fw.appendChild(b);
+        });
+        bot.appendChild(fw);
+      }
+      el.appendChild(top); el.appendChild(bot);
+      s2.appendChild(el);
+    });
+    box.appendChild(s2);
+
+    if (!ready) setStatus("① 티박스를 먼저 재야 낙구 측정이 열립니다.");
+    else if (doneBall < players.length) setStatus("② 각 선수의 낙구 지점을 재세요.");
+    else setStatus(state.jo + " 측정 완료");
   }
 
+  function runTee(t, btn){
+    btn.disabled = true;
+    var tn = teeName(t) + " 티박스";
+    setStatus("① " + tn + " 측정 중…", "busy");
+    sample(6, function(left, best){
+      setStatus("① " + tn + " 측정 중… " + left + "초" + (best ? " · 현재 ±" + Math.round(best.acc) + "m" : ""), "busy");
+    }, function(pt){
+      var r = addTeeSample(t, pt);
+      setStatus(r.warn || (tn + " 기준점 " + r.ref.n + "회 평균 · ±" + r.ref.acc.toFixed(1) + "m"), r.warn ? "err" : "");
+    }, function(msg){ btn.disabled = false; setStatus(msg, "err"); });
+  }
+  function runBall(p, btn){
+    btn.disabled = true;
+    setStatus("② " + p.name + " 낙구 지점 측정 중…", "busy");
+    sample(6, function(left, best){
+      setStatus("② " + p.name + " 낙구 지점 측정 중… " + left + "초" + (best ? " · 현재 ±" + Math.round(best.acc) + "m" : ""), "busy");
+    }, function(pt){
+      var rec = upsertRecord(p, pt), m = measure(rec);
+      setStatus(p.name + " " + Math.round(m.dist) + "m (±" + m.err.toFixed(1) + "m)");
+    }, function(msg){ btn.disabled = false; setStatus(msg, "err"); });
+  }
+
+  /* ── 렌더: 순위 ───────────────────────── */
   function renderBoard(){
     var flagged = [];
     [["W","rankM","남"],["R","rankF","여"]].forEach(function(g){
       var ol = $(g[1]); ol.innerHTML = "";
-      var rows = state.records
-        .filter(function(r){ return r.hole === state.hole && r.tee === g[0]; })
-        .map(function(r){ var m = measure(r); return m ? { r:r, m:m } : null; })
+      var rows = state.records.filter(function(r){ return r.tee === g[0]; })
+        .map(function(r){ var m = measure(r); return m ? {r:r,m:m} : null; })
         .filter(Boolean)
-        .sort(function(a,b){ return (b.r.fw - a.r.fw) || (b.m.dist - a.m.dist); });
-
+        .sort(function(a,b){ return (b.r.fw-a.r.fw) || (b.m.dist-a.m.dist); });
       if (!rows.length){
-        var li = document.createElement("li");
-        li.style.background = "transparent";
+        var li = document.createElement("li"); li.style.background = "transparent";
         li.innerHTML = '<span class="empty" style="grid-column:1/-1">아직 기록이 없습니다.</span>';
         ol.appendChild(li); return;
       }
@@ -466,22 +531,21 @@
       rows.forEach(function(x){
         if (x.r.fw) pos++;
         var li = document.createElement("li");
-        if (x.r.fw && pos === 1) li.className = "lead";
+        if (x.r.fw && pos===1) li.className = "lead";
         if (!x.r.fw) li.className = "out";
-        var idx = document.createElement("div");
-        idx.className = "pos"; idx.textContent = x.r.fw ? pos : "—";
-        var nm = document.createElement("div");
-        nm.className = "nm";
-        nm.innerHTML = x.r.name + (x.r.fw ? "" : "<em>페어웨이 벗어남</em>");
-        var val = document.createElement("div");
-        val.className = "val";
+        var idx = document.createElement("div"); idx.className = "pos";
+        idx.textContent = x.r.fw ? pos : "—";
+        var nm = document.createElement("div"); nm.className = "nm";
+        nm.innerHTML = x.r.name + "<em>" + (x.r.jo ? x.r.jo + " · " : "") + HOLES[x.r.hole].label +
+                       (x.r.fw ? "" : " · 페어웨이 벗어남") + "</em>";
+        var val = document.createElement("div"); val.className = "val";
         val.innerHTML = Math.round(x.m.dist) + "m<small>±" + x.m.err.toFixed(1) + "m</small>";
         var del = document.createElement("button");
         del.className = "del"; del.type = "button"; del.textContent = "×";
         del.setAttribute("aria-label", x.r.name + " 기록 삭제");
         del.onclick = function(){
           var k = state.records.indexOf(x.r);
-          if (k > -1){ state.records.splice(k,1); write(K_REC, state.records); renderBoard(); }
+          if (k > -1){ state.records.splice(k,1); write(K_REC, state.records); renderAll(); }
         };
         li.appendChild(idx); li.appendChild(nm); li.appendChild(val); li.appendChild(del);
         ol.appendChild(li);
@@ -493,43 +557,23 @@
       : "";
   }
 
-  function renderAll(){ renderHoles(); renderPlayers(); renderTees(); renderBoard(); syncButtons(); }
-
-  /* ── 이벤트 ───────────────────────────── */
-  $("teeBtn").onclick = function(){
-    var b = this; b.disabled = true;
-    var tn = state.tee === "W" ? "화이트" : "레드";
-    setStatus("① " + tn + " 티박스 측정 중…", "busy");
-    sample(6, function(left, best){
-      setStatus("① " + tn + " 티박스 측정 중… " + left + "초" + (best ? " · 현재 ±" + Math.round(best.acc) + "m" : ""), "busy");
-    }, function(pt){
-      b.disabled = false;
-      var ref = addTeeSample(pt);
-      setStatus(tn + " 기준점 " + ref.n + "회 평균 · ±" + ref.acc.toFixed(1) + "m");
-    }, function(msg){ b.disabled = false; setStatus(msg, "err"); });
-  };
-
-  $("ballBtn").onclick = function(){
-    if (!nameNow()){ setStatus("선수를 고르거나 이름을 입력하세요.", "err"); return; }
-    var b = this; b.disabled = true;
-    setStatus("② 낙구 지점 측정 중…", "busy");
-    sample(6, function(left, best){
-      setStatus("② 낙구 지점 측정 중… " + left + "초" + (best ? " · 현재 ±" + Math.round(best.acc) + "m" : ""), "busy");
-    }, function(pt){
-      b.disabled = false; addRecord(pt); setStatus("기록 완료");
-    }, function(msg){ b.disabled = false; setStatus(msg, "err"); });
-  };
-
-  Array.prototype.forEach.call($("teeSeg").children, function(b){
-    b.onclick = function(){ setTee(b.dataset.tee); renderTees(); syncButtons(); };
-  });
-  Array.prototype.forEach.call($("fwSeg").children, function(b){
-    b.onclick = function(){ setFw(Number(b.dataset.fw)); };
-  });
-  $("freeName").oninput = function(){
-    if (this.value.trim()){ state.name = ""; renderPlayers(); }
-    syncButtons();
-  };
+  /* ── 수동 좌표 대상 목록 ───────────────── */
+  function renderManualTargets(){
+    var sel = $("mTarget"); sel.innerHTML = "";
+    if (!state.jo){
+      sel.innerHTML = '<option value="">조를 먼저 고르세요</option>'; return;
+    }
+    neededTees().forEach(function(t){
+      var o = document.createElement("option");
+      o.value = "T:" + t; o.textContent = teeName(t) + " 티박스";
+      sel.appendChild(o);
+    });
+    joPlayers().forEach(function(p){
+      var o = document.createElement("option");
+      o.value = "B:" + p.name; o.textContent = p.name + " 낙구 지점";
+      sel.appendChild(o);
+    });
+  }
 
   function parseCoord(s){
     var m = String(s).match(/(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)/);
@@ -538,41 +582,64 @@
     if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
     return { lat:lat, lng:lng, acc:5 };
   }
-  $("mTeeBtn").onclick = function(){
-    var p = parseCoord($("mTee").value);
+  $("mApply").onclick = function(){
+    var v = $("mTarget").value;
+    if (!v){ setStatus("조를 먼저 고르세요.", "err"); return; }
+    var p = parseCoord($("mCoord").value);
     if (!p){ setStatus("좌표를 읽지 못했습니다. 37.831234, 127.612345 형식으로 넣으세요.", "err"); return; }
-    var ref = addTeeSample(p);
-    setStatus("기준점 " + ref.n + "회 평균 · ±" + ref.acc.toFixed(1) + "m (직접 입력)");
+    if (v.charAt(0) === "T"){
+      var r = addTeeSample(v.slice(2), p);
+      setStatus("기준점 " + r.ref.n + "회 평균 · ±" + r.ref.acc.toFixed(1) + "m (직접 입력)");
+    } else {
+      var nm = v.slice(2);
+      var pl = joPlayers().filter(function(x){ return x.name === nm; })[0];
+      if (!pl) return;
+      if (!teeRef(keyOf(pl.hole, pl.sex==="여"?"R":"W"))){ setStatus("① 티박스를 먼저 재세요.", "err"); return; }
+      var rec = upsertRecord(pl, p), m = measure(rec);
+      setStatus(nm + " " + Math.round(m.dist) + "m (직접 입력)");
+    }
+    $("mCoord").value = "";
   };
-  $("mBallBtn").onclick = function(){
-    if (!teeRef(teeKey())){ setStatus("① 티박스를 먼저 측정하세요.", "err"); return; }
-    if (!nameNow()){ setStatus("선수를 고르거나 이름을 입력하세요.", "err"); return; }
-    var p = parseCoord($("mBall").value);
-    if (!p){ setStatus("좌표를 읽지 못했습니다.", "err"); return; }
-    addRecord(p); setStatus("기록 완료 (직접 입력)");
+
+  /* ── 게스트 ───────────────────────────── */
+  Array.prototype.forEach.call($("gTee").children, function(b){
+    b.onclick = function(){
+      Array.prototype.forEach.call($("gTee").children, function(x){
+        x.setAttribute("aria-pressed", String(x === b));
+      });
+    };
+  });
+  $("gAdd").onclick = function(){
+    if (!state.jo){ setStatus("조를 먼저 고르세요.", "err"); return; }
+    var nm = $("gName").value.trim();
+    if (!nm){ setStatus("이름을 입력하세요.", "err"); return; }
+    var tee = "W";
+    Array.prototype.forEach.call($("gTee").children, function(x){
+      if (x.getAttribute("aria-pressed") === "true") tee = x.dataset.tee;
+    });
+    state.guests.push({ jo:state.jo, name:nm, sex:(tee==="R"?"여":"남"), hole:joHole() });
+    write("jb4.longest.guests", state.guests);
+    $("gName").value = "";
+    renderAll();
+    setStatus(nm + " 추가됨");
   };
 
   $("copyBtn").onclick = function(){
     var out = [];
-    HOLES.forEach(function(h){
-      var any = state.records.filter(function(r){ return r.hole === h.id; });
-      if (!any.length) return;
-      out.push("[" + h.label + "]");
-      [["W","남자부 · 화이트"],["R","여자부 · 레드"]].forEach(function(g){
-        var list = any.filter(function(r){ return r.tee === g[0]; })
-          .map(function(r){ var m = measure(r); return m ? {r:r,m:m} : null; })
-          .filter(Boolean)
-          .sort(function(a,b){ return (b.r.fw-a.r.fw) || (b.m.dist-a.m.dist); });
-        if (!list.length) return;
-        var ref = teeRef(h.id + ":" + g[0]);
-        out.push(" " + g[1] + "  (기준점 " + ref.n + "회 평균 ±" + ref.acc.toFixed(1) + "m)");
-        var pos = 0;
-        list.forEach(function(x){
-          if (x.r.fw) pos++;
-          out.push("  " + (x.r.fw ? pos + "위" : "제외") + " " + x.r.name + " " +
-                   Math.round(x.m.dist) + "m (±" + x.m.err.toFixed(1) + "m)" +
-                   (x.r.fw ? "" : " 페어웨이 벗어남"));
-        });
+    [["W","남자부 · 화이트"],["R","여자부 · 레드"]].forEach(function(g){
+      var list = state.records.filter(function(r){ return r.tee===g[0]; })
+        .map(function(r){ var m = measure(r); return m ? {r:r,m:m} : null; })
+        .filter(Boolean)
+        .sort(function(a,b){ return (b.r.fw-a.r.fw)||(b.m.dist-a.m.dist); });
+      if (!list.length) return;
+      out.push("[" + g[1] + "]");
+      var pos = 0;
+      list.forEach(function(x){
+        if (x.r.fw) pos++;
+        out.push(" " + (x.r.fw ? pos+"위" : "제외") + " " + x.r.name + " " +
+                 Math.round(x.m.dist) + "m (±" + x.m.err.toFixed(1) + "m) · " +
+                 (x.r.jo ? x.r.jo + " " : "") + HOLES[x.r.hole].label +
+                 (x.r.fw ? "" : " · 페어웨이 벗어남"));
       });
     });
     var text = out.join("\n") || "기록 없음";
@@ -584,13 +651,13 @@
   };
 
   $("resetBtn").onclick = function(){
-    state.records = []; state.tees = {};
-    write(K_REC, state.records); write(K_TEE, state.tees);
-    $("plaque").classList.remove("show");
+    state.records = []; state.tees = {}; state.guests = [];
+    write(K_REC, state.records); write(K_TEE, state.tees); write("jb4.longest.guests", state.guests);
     renderAll();
   };
 
-  setTee("W"); setFw(1); renderAll();
+  function renderAll(){ renderJo(); renderFlow(); renderBoard(); renderManualTargets(); }
+  renderAll();
 })();
 </script>
 </body>
