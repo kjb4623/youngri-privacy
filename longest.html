@@ -264,7 +264,7 @@
   var K_ROSTER = "jb4.longest.roster";
 
   function applyRoster(raw){
-    /* 형식:  V6|1조,서민지,여;1조,정종민,남 / L2|3조,김주아,여  */
+    /* 형식:  <홀ID>|<조>,<이름>,<남|여>;…  여러 홀은 / 로 구분 */
     var ok = false;
     raw.split("/").forEach(function(block){
       var bits = block.split("|");
