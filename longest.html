@@ -285,6 +285,11 @@
     return ok;
   }
 
+  /* 2026-08-21 제4회 JB대전 출전 명단. 링크 뒤 #p=… 로 덮어쓸 수 있다. */
+  var DEFAULT_ROSTER =
+    "V6|1조,서민지,여;1조,정종민,남;2조,성우진,남;2조,최아영,여;5조,김정은,여;5조,이은제,남" +
+    "/L2|3조,김주아,여;3조,윤서래,여;4조,이혜림,여;4조,지재현,남";
+
   (function initRoster(){
     var m = (location.hash || "").match(/[#&]p=([^&]+)/);
     var raw = null;
@@ -298,7 +303,8 @@
     }
     var cached = null;
     try { cached = localStorage.getItem(K_ROSTER); } catch(e){}
-    if (cached) applyRoster(cached);
+    if (cached && applyRoster(cached)) return;
+    applyRoster(DEFAULT_ROSTER);
   })();
 
   var K_TEE = "jb4.longest.tee.", K_REC = "jb4.longest.records";
