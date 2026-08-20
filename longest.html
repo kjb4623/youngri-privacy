@@ -384,7 +384,7 @@
       if (r.sy) return;
       jobs.push(api(SUPA.recs, { method:"POST", prefer:"resolution=merge-duplicates,return=minimal", body:{
         name:r.name, jo:r.jo||null, sex:r.sex, tee:r.tee, hole:r.hole, fw:!!r.fw,
-        lat:r.ball.lat, lng:r.ball.lng, acc:r.ball.acc, dev:r.dev||null, updated_at:r.at
+        lat:r.ball.lat, lng:r.ball.lng, acc:r.ball.acc, n:(r.n||1), dev:r.dev||null, updated_at:r.at
       }}).then(function(){ r.sy = true; }));
     });
     state.gone.forEach(function(g){
@@ -425,7 +425,7 @@
         if (cur && (!cur.sy || (cur.at || "") >= (row.updated_at || ""))) return;
         var rec = { name:row.name, jo:row.jo, sex:row.sex, tee:row.tee, hole:row.hole,
                     fw:!!row.fw, ball:{ lat:row.lat, lng:row.lng, acc:row.acc },
-                    dev:row.dev, at:row.updated_at, sy:true };
+                    n:(row.n || 1), dev:row.dev, at:row.updated_at, sy:true };
         if (cur) state.records.splice(state.records.indexOf(cur), 1, rec);
         else state.records.push(rec);
         changed = true;
@@ -558,12 +558,24 @@
     renderAll(); syncNow();
     return { ref:teeRef(key), warn:warn };
   }
-  function upsertRecord(p, ball){
+  /* 가중평균은 (평균, 오차) 만으로 정확히 갱신된다.
+     w = 1/acc² 이므로 누적가중치 W = 1/acc², 새 표본을 더하면
+       W' = W + w,  평균' = (W·평균 + w·x) / W',  오차' = 1/√W'
+     → 원본 표본을 들고 있지 않아도 티박스와 동일하게 정밀도가 올라간다. */
+  function combine(prev, pt){
+    if (!prev) return { lat:pt.lat, lng:pt.lng, acc:pt.acc };
+    var W = 1/Math.max(1, prev.acc*prev.acc), w = 1/Math.max(1, pt.acc*pt.acc), T = W + w;
+    return { lat:(W*prev.lat + w*pt.lat)/T, lng:(W*prev.lng + w*pt.lng)/T, acc:1/Math.sqrt(T) };
+  }
+
+  function upsertRecord(p, ball, restart){
     var old = recOf(p.name);
+    var base = (old && !restart) ? old.ball : null;
     var rec = { name:p.name, sex:p.sex, jo:p.jo, hole:p.hole,
-                tee:(p.sex==="여"?"R":"W"), fw:(old?old.fw:1), ball:ball,
-                dev:(ball.dev || DEVICE), at:new Date().toISOString() };
-    rec.at = new Date().toISOString(); rec.sy = false;
+                tee:(p.sex==="여"?"R":"W"), fw:(old?old.fw:1),
+                ball:combine(base, ball),
+                n:(base ? (old.n||1) + 1 : 1),
+                dev:(ball.dev || DEVICE), at:new Date().toISOString(), sy:false };
     if (old) state.records.splice(state.records.indexOf(old), 1, rec);
     else state.records.push(rec);
     write(K_REC, state.records);
@@ -706,15 +718,23 @@
       top.innerHTML = '<span class="tt">' + p.name + '</span>' +
                       '<span class="teetag' + (t==="R"?" r":"") + '">' + teeName(t) + '</span>' +
                       '<span class="task-val">' + (m
-                        ? '<span class="big">' + Math.round(m.dist) + 'm</span><span class="sm">±' + m.err.toFixed(1) + 'm</span>'
+                        ? '<span class="big">' + Math.round(m.dist) + 'm</span><span class="sm">' +
+                          (rec.n > 1 ? rec.n + '회 · ' : '') + '±' + m.err.toFixed(1) + 'm</span>'
                         : '<span class="todo">측정 전</span>') + '</span>';
       var bot = document.createElement("div"); bot.className = "task-bot";
       var go = document.createElement("button");
-      go.className = "go" + (rec ? " again" : ""); go.type = "button";
+      go.className = "go"; go.type = "button";
       go.disabled = !ready;
-      go.textContent = rec ? "다시 재기" : "낙구 지점 측정";
-      go.onclick = function(){ runBall(p, go); };
+      go.textContent = rec ? "한 번 더 재기" : "낙구 지점 측정";
+      go.onclick = function(){ runBall(p, go, false); };
       bot.appendChild(go);
+      if (rec){
+        var re = document.createElement("button");
+        re.className = "go again"; re.type = "button"; re.disabled = !ready;
+        re.textContent = "처음부터";
+        re.onclick = function(){ runBall(p, re, true); };
+        bot.appendChild(re);
+      }
       if (rec){
         var fw = document.createElement("div"); fw.className = "fw";
         [["1","안착"],["0","벗어남"]].forEach(function(o){
@@ -751,14 +771,16 @@
       setStatus(r.warn || (tn + " 기준점 " + r.ref.n + "회 평균 · ±" + r.ref.acc.toFixed(1) + "m"), r.warn ? "err" : "");
     }, function(msg){ btn.disabled = false; setStatus(msg, "err"); });
   }
-  function runBall(p, btn){
+  function runBall(p, btn, restart){
     btn.disabled = true;
-    setStatus("② " + p.name + " 낙구 지점 측정 중…", "busy");
+    var tag = restart ? "처음부터 다시" : "낙구 지점";
+    setStatus("② " + p.name + " " + tag + " 측정 중…", "busy");
     sample(6, function(left, best){
-      setStatus("② " + p.name + " 낙구 지점 측정 중… " + left + "초" + (best ? " · 현재 ±" + Math.round(best.acc) + "m" : ""), "busy");
+      setStatus("② " + p.name + " " + tag + " 측정 중… " + left + "초" +
+                (best ? " · 현재 ±" + Math.round(best.acc) + "m" : ""), "busy");
     }, function(pt){
-      var rec = upsertRecord(p, pt), m = measure(rec);
-      setStatus(p.name + " " + Math.round(m.dist) + "m (±" + m.err.toFixed(1) + "m)");
+      var rec = upsertRecord(p, pt, restart), m = measure(rec);
+      setStatus(p.name + " " + Math.round(m.dist) + "m (±" + m.err.toFixed(1) + "m) · " + rec.n + "회 평균");
     }, function(msg){ btn.disabled = false; setStatus(msg, "err"); });
   }
 
@@ -918,7 +940,7 @@
       list.forEach(function(x){
         if (x.r.fw) pos++;
         out.push(" " + (x.r.fw ? pos+"위" : "제외") + " " + x.r.name + " " +
-                 Math.round(x.m.dist) + "m (±" + x.m.err.toFixed(1) + "m) · " +
+                 Math.round(x.m.dist) + "m (±" + x.m.err.toFixed(1) + "m, " + (x.r.n||1) + "회) · " +
                  (x.r.jo ? x.r.jo + " " : "") + HOLES[x.r.hole].label +
                  (x.r.dev ? " · " + x.r.dev : "") +
                  (x.r.fw ? "" : " · 페어웨이 벗어남"));
