@@ -335,8 +335,12 @@
       headers: h,
       body: opts.body ? JSON.stringify(opts.body) : undefined
     }).then(function(r){
-      if (!r.ok) return r.text().then(function(t){ throw new Error(r.status + " " + t.slice(0,120)); });
-      return r.status === 204 ? null : r.json();
+      /* return=minimal 은 201 + 빈 본문을 준다 → 길이를 보고 파싱해야 한다 */
+      return r.text().then(function(t){
+        if (!r.ok) throw new Error(r.status + " " + t.slice(0, 140));
+        if (!t) return null;
+        try { return JSON.parse(t); } catch(e){ return null; }
+      });
     });
   }
 
@@ -446,7 +450,7 @@
     var n = pendingCount();
     var txt, cls;
     if (sync.busy){ txt = "동기화 중…"; cls = "busy"; }
-    else if (sync.err){ txt = "연결 안 됨 · 대기 " + n + "건 (기록은 폰에 저장됨)"; cls = "err"; }
+    else if (sync.err){ txt = "동기화 실패 · 대기 " + n + "건 — " + sync.err; cls = "err"; }
     else if (n){ txt = "대기 " + n + "건"; cls = "err"; }
     else {
       var ago = sync.last ? Math.round((Date.now()-sync.last)/1000) : null;
