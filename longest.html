@@ -74,6 +74,13 @@
   .task-val .sm{font-size:11px; color:var(--ink-2); display:block}
   .task-val .todo{font-size:13px; color:var(--ink-2)}
   .task-bot{display:flex; gap:8px; align-items:center; margin-top:9px}
+  .samples{margin-top:9px; border-top:1px dashed var(--mist); padding-top:8px;
+    display:flex; flex-direction:column; gap:5px}
+  .sample{display:grid; grid-template-columns:auto auto 1fr auto auto; align-items:center; gap:8px;
+    font-size:12px; color:var(--ink-2); font-variant-numeric:tabular-nums;
+    padding:5px 7px; border-radius:7px; background:var(--panel)}
+  .sample.odd{background:var(--clay-soft); color:var(--clay); font-weight:600}
+  .sample .off{text-align:right}
 
   button.go{flex:1; min-height:46px; border-radius:10px; cursor:pointer;
     font-family:var(--sans); font-size:15px; font-weight:700;
@@ -89,6 +96,8 @@
   button.mini{min-height:36px; padding:0 12px; border-radius:9px; cursor:pointer;
     border:1.5px solid var(--mist); background:var(--panel); color:var(--ink-2);
     font-family:var(--sans); font-size:13px; font-weight:600}
+  button.mini.danger{border-color:var(--clay); color:var(--clay)}
+  button.mini.arm{background:var(--clay); border-color:var(--clay); color:#fff}
 
   .status{min-height:22px; font-size:13.5px; color:var(--ink-2); text-align:center;
     font-variant-numeric:tabular-nums; margin-top:12px}
@@ -174,7 +183,8 @@
     <hr class="rule">
     <div class="row">
       <button class="mini" id="copyBtn" style="flex:1">기록 복사</button>
-      <button class="mini" id="resetBtn" style="flex:1">전체 지우기</button>
+      <button class="mini" id="resetBtn" style="flex:1">이 폰만 지우기</button>
+      <button class="mini danger" id="wipeBtn" style="flex:1 0 100%">공용 기록 전체 초기화</button>
     </div>
   </section>
 
@@ -292,7 +302,8 @@
     jo: (function(){ try { return localStorage.getItem(K_JO) || null; } catch(e){ return null; } })(),
     tees: read(K_TEE,"{}"),      /* "V6:W" -> [{lat,lng,acc}…] */
     records: read(K_REC,"[]"),   /* {name,sex,jo,hole,tee,fw,ball,at} — 이름당 1건(덮어쓰기) */
-    guests: read("jb4.longest.guests","[]")  /* {jo,name,sex,hole} */
+    guests: read("jb4.longest.guests","[]"),  /* {jo,name,sex,hole} */
+    gone: read("jb4.longest.gone","[]")       /* {kind:'t'|'r', key, sy} — 지운 것 기억 */
   };
 
 
@@ -329,8 +340,19 @@
     });
   }
 
+  function isGone(kind, key){
+    for (var i=0;i<state.gone.length;i++)
+      if (state.gone[i].kind === kind && state.gone[i].key === key) return true;
+    return false;
+  }
+  function markGone(kind, key){
+    if (!isGone(kind, key)){ state.gone.push({ kind:kind, key:key, sy:false });
+      write("jb4.longest.gone", state.gone); }
+  }
+
   function pendingCount(){
     var n = 0;
+    state.gone.forEach(function(g){ if (!g.sy) n++; });
     Object.keys(state.tees).forEach(function(k){
       state.tees[k].forEach(function(x){ if (!x.sy) n++; });
     });
@@ -356,9 +378,17 @@
         lat:r.ball.lat, lng:r.ball.lng, acc:r.ball.acc, dev:r.dev||null, updated_at:r.at
       }}).then(function(){ r.sy = true; }));
     });
+    state.gone.forEach(function(g){
+      if (g.sy) return;
+      var path = g.kind === "t"
+        ? SUPA.tees + "?id=eq." + encodeURIComponent(g.key)
+        : SUPA.recs + "?name=eq." + encodeURIComponent(g.key);
+      jobs.push(api(path, { method:"DELETE", prefer:"return=minimal" }).then(function(){ g.sy = true; }));
+    });
     if (!jobs.length) return Promise.resolve(false);
     return Promise.all(jobs).then(function(){
       write(K_TEE, state.tees); write(K_REC, state.records);
+      write("jb4.longest.gone", state.gone);
       return true;
     });
   }
@@ -373,7 +403,7 @@
         state.tees[k].forEach(function(x){ seen[x.id] = 1; });
       });
       (res[0]||[]).forEach(function(row){
-        if (seen[row.id]) return;
+        if (seen[row.id] || isGone("t", row.id)) return;
         var k = row.hole + ":" + row.tee;
         if (!state.tees[k]) state.tees[k] = [];
         state.tees[k].push({ id:row.id, lat:row.lat, lng:row.lng, acc:row.acc,
@@ -381,6 +411,7 @@
         changed = true;
       });
       (res[1]||[]).forEach(function(row){
+        if (isGone("r", row.name)) return;
         var cur = recOf(row.name);
         if (cur && (!cur.sy || (cur.at || "") >= (row.updated_at || ""))) return;
         var rec = { name:row.name, jo:row.jo, sex:row.sex, tee:row.tee, hole:row.hole,
@@ -573,6 +604,7 @@
   }
 
   /* ── 렌더: 진행 ───────────────────────── */
+  var openSamples = {};
   function renderFlow(){
     var box = $("flow"); box.innerHTML = "";
     if (!state.jo) return;
@@ -602,13 +634,48 @@
       go.textContent = ref ? "한 번 더 재기" : (who ? who + " 티박스 측정" : "측정");
       go.onclick = function(){ runTee(t, go); };
       bot.appendChild(go);
+      var listWrap = null;
       if (ref){
-        var note = document.createElement("span");
-        note.className = "help"; note.style.flex = "1";
-        note.textContent = "여러 번 잴수록 정확해집니다";
-        bot.appendChild(note);
+        var key = keyOf(hole, t);
+        var toggle = document.createElement("button");
+        toggle.className = "mini"; toggle.type = "button";
+        toggle.textContent = "샘플 " + ref.n + "개";
+        bot.appendChild(toggle);
+        listWrap = document.createElement("div");
+        listWrap.className = "samples";
+        listWrap.hidden = !openSamples[key];
+        (state.tees[key]||[]).forEach(function(sp){
+          var off = distance(ref, sp);
+          var r = document.createElement("div");
+          r.className = "sample" + (off > 15 ? " odd" : "");
+          r.innerHTML = '<span>±' + Math.round(sp.acc) + 'm</span>' +
+                        '<span>' + (sp.jo || "-") + '</span>' +
+                        '<span>' + (sp.dev || "-") + '</span>' +
+                        '<span class="off">편차 ' + off.toFixed(1) + 'm</span>';
+          var x = document.createElement("button");
+          x.className = "del"; x.type = "button"; x.textContent = "×";
+          x.setAttribute("aria-label", "이 샘플 삭제");
+          x.onclick = function(){
+            var arr = state.tees[key], i = arr.indexOf(sp);
+            if (i > -1){
+              arr.splice(i, 1);
+              if (!arr.length) delete state.tees[key];
+              markGone("t", sp.id);
+              write(K_TEE, state.tees);
+              renderAll(); syncNow();
+              setStatus("샘플 1개 삭제 — 기준점 다시 계산됨");
+            }
+          };
+          r.appendChild(x);
+          listWrap.appendChild(r);
+        });
+        toggle.onclick = function(){
+          openSamples[key] = !openSamples[key];
+          listWrap.hidden = !openSamples[key];
+        };
       }
       el.appendChild(top); el.appendChild(bot);
+      if (listWrap) el.appendChild(listWrap);
       s1.appendChild(el);
     });
     box.appendChild(s1);
@@ -726,9 +793,8 @@
         del.onclick = function(){
           var k = state.records.indexOf(x.r);
           if (k > -1){
-            state.records.splice(k,1); write(K_REC, state.records); renderAll();
-            api(SUPA.recs + "?name=eq." + encodeURIComponent(x.r.name), { method:"DELETE", prefer:"return=minimal" })
-              .catch(function(){});
+            state.records.splice(k,1); markGone("r", x.r.name);
+            write(K_REC, state.records); renderAll(); syncNow();
           }
         };
         li.appendChild(idx); li.appendChild(nm); li.appendChild(val); li.appendChild(del);
@@ -857,11 +923,41 @@
     } else { window.prompt("복사하세요", text); }
   };
 
+  var wipeArmed = false, wipeTimer = null;
+  $("wipeBtn").onclick = function(){
+    var b = this;
+    if (!wipeArmed){
+      wipeArmed = true; b.classList.add("arm");
+      b.textContent = "정말 지웁니다 — 한 번 더 누르세요";
+      wipeTimer = setTimeout(function(){
+        wipeArmed = false; b.classList.remove("arm");
+        b.textContent = "공용 기록 전체 초기화";
+      }, 5000);
+      return;
+    }
+    clearTimeout(wipeTimer); wipeArmed = false;
+    b.classList.remove("arm"); b.textContent = "지우는 중…"; b.disabled = true;
+    Promise.all([
+      api(SUPA.tees + "?id=not.is.null", { method:"DELETE", prefer:"return=minimal" }),
+      api(SUPA.recs + "?name=not.is.null", { method:"DELETE", prefer:"return=minimal" })
+    ]).then(function(){
+      state.records = []; state.tees = {}; state.gone = [];
+      write(K_REC, state.records); write(K_TEE, state.tees); write("jb4.longest.gone", state.gone);
+      renderAll();
+      setStatus("공용 기록을 전부 지웠습니다. 다른 폰은 새로고침하면 반영됩니다.");
+    }).catch(function(e){
+      setStatus("초기화 실패: " + (e.message || "연결 안 됨"), "err");
+    }).then(function(){
+      b.disabled = false; b.textContent = "공용 기록 전체 초기화";
+    });
+  };
+
   $("resetBtn").onclick = function(){
-    state.records = []; state.tees = {}; state.guests = [];
-    write(K_REC, state.records); write(K_TEE, state.tees); write("jb4.longest.guests", state.guests);
-    renderAll();
-    setStatus("이 폰의 기록만 지웠습니다. 공용 DB 기록은 다음 동기화 때 다시 내려옵니다.");
+    state.records = []; state.tees = {}; state.guests = []; state.gone = [];
+    write(K_REC, state.records); write(K_TEE, state.tees);
+    write("jb4.longest.guests", state.guests); write("jb4.longest.gone", state.gone);
+    renderAll(); syncNow();
+    setStatus("이 폰의 화면만 비웠습니다. 공용 DB 기록은 곧 다시 내려옵니다.");
   };
 
   function renderAll(){ renderJo(); renderFlow(); renderBoard(); renderManualTargets(); renderSync(); }
